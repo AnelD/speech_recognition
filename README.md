@@ -1,14 +1,53 @@
 # speech_recognition
+
 Speech Recognition for Uni project
 
 # 🇬🇧 🇺🇸 – How to Install
 
+Prerequisites
+
+This project requires FFmpeg to be installed and available in your system's PATH.
+🛠️ Install FFmpeg on Windows (Binary + PATH Setup)
+
+Download a static build from the official site:
+👉 https://www.gyan.dev/ffmpeg/builds/
+Choose:
+ffmpeg-release-essentials.zip
+
+Extract the zip to a location like:
+``
+C:\ffmpeg
+``
+
+Inside that folder, go to ``C:\ffmpeg\bin``, and copy the full path.
+
+Add FFmpeg to your system PATH:
+
+```
+Open Start Menu → search for Environment Variables
+
+Click "Edit the system environment variables"
+
+In the dialog, click "Environment Variables..."
+
+Under "System variables", find and select Path, then click Edit
+
+Click New and paste:
+
+C:\ffmpeg\bin
+
+Click OK on all windows.
+```
+
+Open a new terminal and check if it works:
+
+``ffmpeg -version``
 
 After cloning the repository go inside the project folder and create a virtual environment
 
-*Windows* 
+*Windows*
 <br>
-``python -m venv venv`` 
+``python -m venv venv``
 <br>
 ``venv\Scripts\activate``
 <br>
