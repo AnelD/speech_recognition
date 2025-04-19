@@ -2,13 +2,18 @@
 
 Speech Recognition for Uni project
 
-# 🇬🇧 🇺🇸 – How to Install
+# How to Install
 
-Prerequisites
+## Prerequisites
 
-Works with Python 3.11, 3.12 
+python 🐍 (Tested with 3.11 and 3.12)  
+piper 🗣️  
+FFmpeg 🔁
 
-This project requires FFmpeg to be installed and available in your system's PATH.
+### 🛠️ Install piper
+
+Follow the instructions here https://github.com/rhasspy/piper  
+You can Download voices here https://huggingface.co/rhasspy/piper-voices/tree/main
 
 ### 🛠️ Install FFmpeg on Linux(Debian)
 
