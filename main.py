@@ -1,4 +1,5 @@
 import asyncio
+import os
 import pathlib
 import threading
 import time
@@ -143,17 +144,18 @@ class MonitorDirectory(FileSystemEventHandler):
     def on_created(self, event):
         # Run function when a file is moved to the directory
         filename = event.src_path.split("\\")[-1]
+        filename = filename.split("/")[-1]
         if not event.is_directory:
             print("File Created")
             # speech_queue.put(filename)
-            # asyncio.run_coroutine_threadsafe(self.handle_modified(event), self.loop)
+            asyncio.run_coroutine_threadsafe(self.handle_modified(event), self.loop)
 
     # only for testing text to speech
     def on_modified(self, event):
         print("File Modified")
-        future = asyncio.run_coroutine_threadsafe(
-            self.handle_modified(event), self.loop
-        )
+        # future = asyncio.run_coroutine_threadsafe(
+        #   self.handle_modified(event), self.loop
+        # )
 
         # Optionally, check for errors
         try:
@@ -164,10 +166,16 @@ class MonitorDirectory(FileSystemEventHandler):
 
     async def handle_modified(self, event):
         print("Coroutine started")
+        print(event)
         filename = event.src_path.split("\\")[-1]
-        if not event.is_directory:
-            await self.queue.put(filename)
-            print("queue filled")
+        filename = filename.split("/")[-1]
+        print(event.event_type)
+        print(event.src_path)
+        print(event.dest_path)
+        print(event.is_directory)
+        print(event.is_synthetic)
+        await self.queue.put(filename)
+        print("queue filled")
 
 
 def start_observer(loop, queue, path):
@@ -181,6 +189,26 @@ def start_observer(loop, queue, path):
 
 # threading.Thread(target=speechToJson, daemon=True).start()
 # threading.Thread(target=waitForInput, daemon=True).start()
+
+
+async def wait_for_file(path, timeout=3, check_interval=0.5):
+    """
+    Wait asynchronously until a file exists and its size stabilizes.
+    """
+    print("Waiting for file", path)
+    start_time = asyncio.get_event_loop().time()
+    last_size = -1
+
+    while (asyncio.get_event_loop().time() - start_time) < timeout:
+        current_size = os.path.getsize(path)
+        print("Size:", current_size)
+        if current_size == last_size:
+            return True  # File is stable
+        last_size = current_size
+
+        await asyncio.sleep(check_interval)
+
+    return False  # Timed out
 
 
 async def main():
@@ -212,5 +240,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    print("test")
     asyncio.run(main())
