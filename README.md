@@ -7,7 +7,13 @@ Speech Recognition for Uni project
 Prerequisites
 
 This project requires FFmpeg to be installed and available in your system's PATH.
-🛠️ Install FFmpeg on Windows (Binary + PATH Setup)
+🛠️ Install FFmpeg on Windows
+
+With a package manager (Chocolatey)
+
+``choco install ffmpeg``
+
+(Binary + PATH Setup)
 
 Download a static build from the official site:
 👉 https://www.gyan.dev/ffmpeg/builds/
