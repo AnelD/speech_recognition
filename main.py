@@ -1,5 +1,4 @@
 import asyncio
-import os
 import pathlib
 import threading
 import time
@@ -189,26 +188,6 @@ def start_observer(loop, queue, path):
 
 # threading.Thread(target=speechToJson, daemon=True).start()
 # threading.Thread(target=waitForInput, daemon=True).start()
-
-
-async def wait_for_file(path, timeout=3, check_interval=0.5):
-    """
-    Wait asynchronously until a file exists and its size stabilizes.
-    """
-    print("Waiting for file", path)
-    start_time = asyncio.get_event_loop().time()
-    last_size = -1
-
-    while (asyncio.get_event_loop().time() - start_time) < timeout:
-        current_size = os.path.getsize(path)
-        print("Size:", current_size)
-        if current_size == last_size:
-            return True  # File is stable
-        last_size = current_size
-
-        await asyncio.sleep(check_interval)
-
-    return False  # Timed out
 
 
 async def main():

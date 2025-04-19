@@ -1,4 +1,3 @@
-import subprocess
 import asyncio
 
 
@@ -9,7 +8,7 @@ async def run_command_in_subprocess(command: str, cwd):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         shell=True,  # shell should be True to invoke the command shell.
-        cwd=cwd
+        cwd=cwd,
     )
 
     # Wait for the process to complete.
@@ -23,11 +22,13 @@ async def run_command_in_subprocess(command: str, cwd):
 
 
 async def get_audio(queue):
-    piper_path = r"C:\Users\dervi\Desktop\piper"
-    piper_command = r'| .\piper.exe '
-    modell_hessisch = '-m Thorsten-Voice_Hessisch_Piper_high-Oct2023.onnx '
-    modell_normal = '-m de_DE-thorsten-high.onnx '
-    output_path = r'-d C:\Users\dervi\PycharmProjects\speechPoc\data\generated'
+    # piper_path = r"C:\Users\dervi\Desktop\piper"
+    piper_path = r"/home/anel/Desktop/piper"
+    piper_command = r"| ./piper "
+    modell_hessisch = "-m Thorsten-Voice_Hessisch_Piper_high-Oct2023.onnx "
+    modell_normal = "-m de_DE-thorsten-high.onnx "
+    # output_path = r"-d C:\Users\dervi\PycharmProjects\speechPoc\data\generated"
+    output_path = r"-d /home/anel/PycharmProjects/speech_recognition/data/generated"
 
     while True:
         input = await queue.get()
