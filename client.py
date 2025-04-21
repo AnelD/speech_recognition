@@ -1,13 +1,13 @@
-from pydantic import BaseModel
-import websockets
 import asyncio
-
-from websockets import ConnectionClosed
 import json
+
+import websockets
+from pydantic import BaseModel
+from websockets import ConnectionClosed
 
 
 class WebSocketClient:
-    def __init__(self, uri, queue = None):
+    def __init__(self, uri, queue=None):
         self.uri = uri
         self.queue = queue
         self.ws = None
@@ -25,11 +25,11 @@ class WebSocketClient:
     async def consume(self, raw):
         try:
             print(f"Raw message: {raw}")
-            #message = Message.model_validate_json(raw)
+            # message = Message.model_validate_json(raw)
             message = json.loads(raw)
             print(f"Message received: {message}")
-            if message['type'] == 'GENERATE_AUDIO_REQUEST':
-                text = message['message']['text']
+            if message["type"] == "GENERATE_AUDIO_REQUEST":
+                text = message["message"]["text"]
                 print("Text to generate audio from: ", message)
                 await self.queue.put(text)
         except Exception as e:
@@ -53,6 +53,7 @@ class WebSocketClient:
 class Content(BaseModel):
     fileName: str
     text: str
+
 
 class Message(BaseModel):
     type: str

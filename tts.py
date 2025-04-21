@@ -41,10 +41,9 @@ async def get_audio(queue):
     piper_dir = str(Path(config.PIPER_DIR.encode("unicode_escape").decode()))
     piper_command = rf"| .{os.sep}piper "
     voice = "-m " + config.VOICE_NAME
-    output_path = "-d " + str(
+    output_path = " -d " + str(
         Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode())
     )
-    loop = asyncio.get_event_loop()
 
     while True:
         text = await queue.get()
@@ -53,7 +52,4 @@ async def get_audio(queue):
         command = input_text + piper_command + voice + output_path
         print(command)
 
-        # Run the generation in separate thread to not block the event loop
-        await loop.run_in_executor(
-            None, run_command_in_subprocess, *(command, piper_dir)
-        )
+        asyncio.create_task(run_command_in_subprocess(command, cwd=piper_dir))
