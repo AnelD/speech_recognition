@@ -31,25 +31,29 @@ async def run_command_in_subprocess(command: str, cwd: str):
         print(f"[stderr]\n{stderr.decode()}")
 
 
-async def get_audio(queue):
+async def text_to_speech(queue):
     """
     Turn a text message into an audio file.
 
     :param queue: asyncio.Queue from which to get the text
     :return: None
     """
+
+    # configure the command with values from a config file
     piper_dir = str(Path(config.PIPER_DIR.encode("unicode_escape").decode()))
     piper_command = rf"| .{os.sep}piper "
     voice = "-m " + config.VOICE_NAME
     output_path = " -d " + str(
         Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode())
     )
+    command_without_input = piper_command + voice + output_path
 
+    # run forever waiting for inputs
     while True:
         text = await queue.get()
         input_text = f'echo "{text}" '
         print(input_text)
-        command = input_text + piper_command + voice + output_path
+        command = input_text + command_without_input
         print(command)
 
         asyncio.create_task(run_command_in_subprocess(command, cwd=piper_dir))

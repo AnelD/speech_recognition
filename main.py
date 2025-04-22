@@ -196,7 +196,7 @@ async def main():
     speech_queue = asyncio.Queue()
     llm_queue = asyncio.Queue()
     client = ws.WebSocketClient("ws://localhost:8080", text_queue)
-    asyncio.create_task(tts.get_audio(text_queue))
+    asyncio.create_task(tts.text_to_speech(text_queue))
     asyncio.create_task(speechToJson(speech_queue, llm_queue, client))
     asyncio.create_task(waitForInput(llm_queue, client))
     await client.connect()
