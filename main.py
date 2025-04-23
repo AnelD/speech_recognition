@@ -9,6 +9,7 @@ from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 
 import WebSocketClient as ws
 import tts
+from FileSystemObserver import FileSystemObserver
 
 # llm_queue = queue.Queue()
 llm_event = threading.Event()
@@ -19,7 +20,9 @@ speech_event = threading.Event()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.is_available())
 t0 = time.time()
-transcriber = pipeline(model="openai/whisper-large-v3-turbo")
+transcriber = pipeline(
+    model="openai/whisper-large-v3-turbo", torch_dtype="auto", device=device
+)
 t1 = time.time()
 print(f"Whisper loaded in {t1 - t0:.2f} seconds.")
 # 0.5 deutlich schneller
@@ -136,17 +139,16 @@ async def main():
     text_queue = asyncio.Queue()
     speech_queue = asyncio.Queue()
     llm_queue = asyncio.Queue()
-    client = ws.WebSocketClient("ws://localhost:8080", text_queue)
+    client = ws.WebSocketClient("ws://localhost:8080")
     asyncio.create_task(tts.text_to_speech(text_queue))
     asyncio.create_task(speechToJson(speech_queue, llm_queue, client))
     asyncio.create_task(waitForInput(llm_queue, client))
     await client.connect()
     await client.send_message("sp")
     path = pathlib.Path("data/in").resolve()
+    observer = FileSystemObserver(loop, speech_queue)
     print(path)
-    threading.Thread(
-        target=start_observer, args=(loop, speech_queue, path), daemon=True
-    ).start()
+    threading.Thread(target=observer.start_observer, args=(path,), daemon=True).start()
     print("Observer thread launched")
 
     while True:

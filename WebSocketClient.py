@@ -1,5 +1,6 @@
 import asyncio
-from typing import Callable, Optional
+import json
+from typing import Optional
 
 import websockets
 from websockets import ConnectionClosed
@@ -12,28 +13,24 @@ class WebSocketClient:
 
     Attributes:
         uri (str): The URI of the websocket server
-        message_handler (Optional[Callable[[str], None]] = None): Handler for incoming messages.
-        message_preprocessor (Optional[Callable[[str], str]] = None): Preprocessor for outgoing messages.
     """
 
     def __init__(
         self,
         uri: str,
-        message_handler: Optional[Callable[[str], None]],
-        message_preprocessor: Optional[Callable[[str], str]],
     ) -> None:
         self.uri = uri
+        self.queue = None
         self.ws = None
-        self.message_handler = message_handler
-        self.message_preprocessor = message_preprocessor
-        print(
-            f"Initialized WebSocketClient with uri: {uri} and message_handler: {message_handler.__name__}"
-        )
 
     async def connect(self):
         """Connect to the websocket server at given URI."""
         self.ws = await websockets.connect(self.uri)
         asyncio.create_task(self.receive_messages())
+
+    # ToDo add logic
+    def message_preprocessor(self, message: str):
+        return message
 
     async def send_message(self, message: str):
         """Send the provided message to the websocket server.
@@ -44,25 +41,22 @@ class WebSocketClient:
         """
         if self.ws:
             if self.message_preprocessor:
-                self.message_preprocessor(message)
+                message = self.message_preprocessor(message)
             print(f"Sending message: {message}")
             await self.ws.send(message)
         else:
             print("Not connected to the WebSocket server.")
 
-    # ToDo: Delete this
-    # async def consume(self, raw):
-    #     try:
-    #         print(f"Raw message: {raw}")
-    #         # message = Message.model_validate_json(raw)
-    #         message = json.loads(raw)
-    #         print(f"Message received: {message}")
-    #         if message["type"] == "GENERATE_AUDIO_REQUEST":
-    #             text = message["message"]["text"]
-    #             print("Text to generate audio from: ", message)
-    #             await self.queue.put(text)
-    #     except Exception as e:
-    #         print(f"Exception occurred: {e}")
+    async def message_handler(self, message: str):
+        try:
+            message = json.loads(message)
+            print(f"Message received: {message}")
+            if message["type"] == "GENERATE_AUDIO_REQUEST":
+                text = message["message"]["text"]
+                print("Text to generate audio from: ", message)
+                await self.queue.put(text)
+        except Exception as e:
+            print(f"Exception occurred: {e}")
 
     async def receive_messages(self):
         """Handles messages from the websocket server.
@@ -72,7 +66,7 @@ class WebSocketClient:
             try:
                 raw = await self.ws.recv()
                 if self.message_handler:
-                    self.message_handler(raw)
+                    await self.message_handler(raw)
                 else:
                     print(f"Message received: {raw}")
             except ConnectionClosed:

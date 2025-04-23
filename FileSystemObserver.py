@@ -13,6 +13,15 @@ from LoggerHelper import LoggerHelper
 class FileSystemObserver(FileSystemEventHandler):
     """
     A class to observe file system events and handle file creation events.
+
+    This class extends the `FileSystemEventHandler` from `watchdog` to monitor
+    file system changes. It listens for file creation events, logs the events,
+    and adds the created file names to a processing queue asynchronously.
+
+    Attributes:
+        loop (AbstractEventLoop): The event loop used for scheduling tasks.
+        queue (Queue): The queue to which filenames are added for processing.
+        logger (Logger): The logger used for logging file system events.
     """
 
     def __init__(
