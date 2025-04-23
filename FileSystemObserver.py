@@ -18,20 +18,15 @@ class FileSystemObserver(FileSystemEventHandler):
     def __init__(
         self, loop: AbstractEventLoop, queue: Queue, log_level: int = logging.WARNING
     ):
-        """
-        Initializes the FileSystemObserver.
-
-        Args:
-            loop (AbstractEventLoop): The event loop used for scheduling asynchronous tasks.
-            queue (Queue): The queue to add filenames to for further processing.
-            log_level (int, optional): The logging level for the logger (default is logging.WARNING).
-        """
         self.loop = loop
         self.queue = queue
         self.logger = LoggerHelper(
             name="app_logger",
             log_level=log_level,
         ).get_logger()
+
+        # Used to store the actual observer instance
+        self.observer = None
 
     def on_any_event(self, event):
         """
@@ -76,8 +71,22 @@ class FileSystemObserver(FileSystemEventHandler):
             path (str): The directory path to monitor for file system events.
         """
         event_handler = self  # Use the current instance as the event handler
-        observer = Observer()
-        observer.schedule(event_handler, path, recursive=False)
-        observer.start()
+        self.observer = Observer()
+        self.observer.schedule(event_handler, path, recursive=False)
+        self.observer.start()
         self.logger.info(f"[Observer] Started watching {path}")
-        observer.join()
+        self.observer.join()
+
+    def stop_observer(self):
+        """
+        Gracefully stops the file system observer.
+        This method stops the observer and joins the threads to ensure a clean shutdown.
+        """
+        if self.observer is not None:
+            self.observer.stop()
+            self.logger.info("[Observer] Stopping observer...")
+            # Wait for the observer thread to finish
+            self.observer.join()
+            self.logger.info("[Observer] Observer stopped successfully.")
+        else:
+            self.logger.warning("[Observer] No observer is currently running.")
