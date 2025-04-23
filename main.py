@@ -6,11 +6,9 @@ import time
 import pydub
 import torch
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
-from watchdog.observers import Observer
 
 import WebSocketClient as ws
 import tts
-from FileSystemObserver import FileSystemObserver
 
 # llm_queue = queue.Queue()
 llm_event = threading.Event()
@@ -127,15 +125,6 @@ async def speechToJson(in_queue, out_queue, client):
         print("Finished transcription, passing to llm")
         await out_queue.put(res["text"])
         speech_event.set()
-
-
-def start_observer(loop, queue, path):
-    event_handler = FileSystemObserver(loop, queue)
-    observer = Observer()
-    observer.schedule(event_handler, path, recursive=False)
-    observer.start()
-    print("[Observer] Started watching", path)
-    observer.join()
 
 
 # threading.Thread(target=speechToJson, daemon=True).start()

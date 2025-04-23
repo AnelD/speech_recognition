@@ -5,6 +5,7 @@ from asyncio import AbstractEventLoop
 from asyncio import Queue
 
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 from LoggerHelper import LoggerHelper
 
@@ -12,21 +13,6 @@ from LoggerHelper import LoggerHelper
 class FileSystemObserver(FileSystemEventHandler):
     """
     A class to observe file system events and handle file creation events.
-
-    This class extends the `FileSystemEventHandler` from `watchdog` to monitor
-    file system changes. It listens for file creation events, logs the events,
-    and adds the created file names to a processing queue asynchronously.
-
-    Attributes:
-        loop (AbstractEventLoop): The event loop used for scheduling tasks.
-        queue (Queue): The queue to which filenames are added for processing.
-        logger (Logger): The logger used for logging file system events.
-
-    Methods:
-        on_any_event(event): Logs any event that occurs on the file system.
-        on_created(event): Handles file creation events, logs the event, and
-                           adds the created file to the processing queue.
-        add_to_queue(filename): Asynchronously adds the filename to the processing queue.
     """
 
     def __init__(
@@ -60,17 +46,12 @@ class FileSystemObserver(FileSystemEventHandler):
         """
         Handles file creation events.
 
-        When a file is created, logs the event, extracts the filename, and attempts
-        to add the filename to the processing queue asynchronously.
-
         Args:
             event (FileSystemEvent): The event triggered by file creation.
         """
-        # Extract filename from event
         filename = str(event.src_path.split(os.sep)[-1])
         self.logger.info(f"Detected file creation: {filename}")
 
-        # Try to add the filename to the queue
         try:
             asyncio.run_coroutine_threadsafe(self.add_to_queue(filename), self.loop)
         except Exception as e:
@@ -80,11 +61,23 @@ class FileSystemObserver(FileSystemEventHandler):
         """
         Asynchronously adds the filename to the processing queue.
 
-        Logs the success or failure of adding the filename to the queue.
-
         Args:
             filename (str): The name of the file to be added to the queue.
         """
         self.logger.info(f"Adding to queue: {filename}")
         await self.queue.put(filename)
         self.logger.info(f"Successfully added: {filename}")
+
+    def start_observer(self, path: str):
+        """
+        Starts the file system observer to monitor the specified directory.
+
+        Args:
+            path (str): The directory path to monitor for file system events.
+        """
+        event_handler = self  # Use the current instance as the event handler
+        observer = Observer()
+        observer.schedule(event_handler, path, recursive=False)
+        observer.start()
+        self.logger.info(f"[Observer] Started watching {path}")
+        observer.join()
