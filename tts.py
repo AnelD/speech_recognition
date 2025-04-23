@@ -9,9 +9,11 @@ async def run_command_in_subprocess(command: str, cwd: str):
     """
     Run a command in a subprocess shell, it awaits the command execution.
 
-    :param command: command to run
-    :param cwd: directory to run the command in
-    :return: None, prints stdout and stderr to console
+    Args:
+        command (str): command to run
+        cwd (str): directory to run the command in
+    Returns:
+        None, prints stdout and stderr to console
     """
     proc = await asyncio.create_subprocess_shell(
         command,
@@ -31,12 +33,14 @@ async def run_command_in_subprocess(command: str, cwd: str):
         print(f"[stderr]\n{stderr.decode()}")
 
 
-async def text_to_speech(queue):
+async def text_to_speech(queue: asyncio.Queue):
     """
     Turn a text message into an audio file.
 
-    :param queue: asyncio.Queue from which to get the text
-    :return: None
+    Args:
+        queue (asyncio.Queue): asyncio.Queue from which to get the text
+    Returns:
+         None
     """
 
     # configure the command with values from a config file
