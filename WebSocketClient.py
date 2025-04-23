@@ -14,22 +14,13 @@ class WebSocketClient:
         uri (str): The URI of the websocket server
         message_handler (Optional[Callable[[str], None]] = None): Handler for incoming messages.
         message_preprocessor (Optional[Callable[[str], str]] = None): Preprocessor for outgoing messages.
-
-    Methods:
-        connect(): Connect to the websocket server at given URI.
-        send_message(message: str):
-        Send the provided message to the websocket server,
-        message_preprocessor will be called before sending the message.
-        receive_message(message: str): Calls the handler on an incoming message,
-        if no handler is provided prints the message.
-        close_connection(message: str): Close the connection to the websocket server with a final message.
     """
 
     def __init__(
         self,
         uri: str,
-        message_handler: Optional[Callable[[str], None]] = None,
-        message_preprocessor: Optional[Callable[[str], str]] = None,
+        message_handler: Optional[Callable[[str], None]],
+        message_preprocessor: Optional[Callable[[str], str]],
     ) -> None:
         self.uri = uri
         self.ws = None
@@ -74,6 +65,9 @@ class WebSocketClient:
     #         print(f"Exception occurred: {e}")
 
     async def receive_messages(self):
+        """Handles messages from the websocket server.
+
+        If no handler is provided, messages will only be printed."""
         while True:
             try:
                 raw = await self.ws.recv()
@@ -86,6 +80,10 @@ class WebSocketClient:
                 break
 
     async def close_connection(self, message: Optional[str] = None):
+        """Close the connection to the websocket server with an optional final message.
+
+        Args:
+            message: str: The message to send."""
         if self.ws:
             print(f"Closing the connection to the WebSocket server")
             if message:

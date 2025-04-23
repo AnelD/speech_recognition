@@ -2,16 +2,15 @@ import asyncio
 import pathlib
 import threading
 import time
-import traceback
 
 import pydub
 import torch
 from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
-from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-import client as ws
+import WebSocketClient as ws
 import tts
+from FileSystemObserver import FileSystemObserver
 
 # llm_queue = queue.Queue()
 llm_event = threading.Event()
@@ -130,55 +129,8 @@ async def speechToJson(in_queue, out_queue, client):
         speech_event.set()
 
 
-class MonitorDirectory(FileSystemEventHandler):
-    def __init__(self, loop, queue):
-        self.loop = loop
-        self.queue = queue
-
-    # def on_any_event(self, event):
-    #    print(event)
-    #    print(event.event_type)
-    #    print(event.src_path.split('\\')[-1])
-
-    def on_created(self, event):
-        # Run function when a file is moved to the directory
-        filename = event.src_path.split("\\")[-1]
-        filename = filename.split("/")[-1]
-        if not event.is_directory:
-            print("File Created")
-            # speech_queue.put(filename)
-            asyncio.run_coroutine_threadsafe(self.handle_modified(event), self.loop)
-
-    # only for testing text to speech
-    def on_modified(self, event):
-        print("File Modified")
-        # future = asyncio.run_coroutine_threadsafe(
-        #   self.handle_modified(event), self.loop
-        # )
-
-        # Optionally, check for errors
-        try:
-            future.result(timeout=90)  # Wait up to 2s for the coroutine to finish
-        except Exception as e:
-            print("[ERROR] Coroutine failed:")
-            traceback.print_exception(type(e), e, e.__traceback__)
-
-    async def handle_modified(self, event):
-        print("Coroutine started")
-        print(event)
-        filename = event.src_path.split("\\")[-1]
-        filename = filename.split("/")[-1]
-        print(event.event_type)
-        print(event.src_path)
-        print(event.dest_path)
-        print(event.is_directory)
-        print(event.is_synthetic)
-        await self.queue.put(filename)
-        print("queue filled")
-
-
 def start_observer(loop, queue, path):
-    event_handler = MonitorDirectory(loop, queue)
+    event_handler = FileSystemObserver(loop, queue)
     observer = Observer()
     observer.schedule(event_handler, path, recursive=False)
     observer.start()
