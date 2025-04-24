@@ -3,7 +3,6 @@ import json
 from typing import Optional
 
 import websockets
-from websockets import ConnectionClosed
 
 
 class WebSocketClient:
@@ -69,9 +68,8 @@ class WebSocketClient:
                     await self.message_handler(raw)
                 else:
                     print(f"Message received: {raw}")
-            except ConnectionClosed:
-                print("Connection to the WebSocket server closed.")
-                break
+            except Exception as e:
+                print(e)
 
     async def close_connection(self, message: Optional[str] = None):
         """Close the connection to the websocket server with an optional final message.

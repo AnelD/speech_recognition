@@ -20,7 +20,7 @@ class ASRService:
     def _load_model(self):
         logger.info(f"Using device: {self.device}")
         t0 = time.time()
-        model = pipeline(model=self.model_name, torch_dtype="auto", device=self.device)
+        model = pipeline(model=self.model_name, torch_dtype="auto", device_map="auto")
         t1 = time.time()
         logger.info(f"Whisper model loaded in {t1 - t0:.2f} seconds.")
         return model
