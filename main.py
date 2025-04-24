@@ -1,14 +1,15 @@
 import asyncio
+import json
 import logging
 import pathlib
 import threading
 
-import WebSocketClient as ws
 import tts
 from ASRService import ASRService
 from FileSystemObserver import FileSystemObserver
 from LLMService import LLMService
 from LoggerHelper import LoggerHelper
+from WebSocketClient import WebSocketClient
 
 logger = LoggerHelper("app_log", log_level=logging.DEBUG).get_logger()
 
@@ -23,17 +24,13 @@ async def waitForInput(queue, client, llm: LLMService):
         try:
             logger.info(f"Received prompt: {prompt}")
             response = llm.generate_json_response(prompt)
-
-            await client.send_message(
-                f"""
-            {{
+            person = json.loads(response)
+            print(person)
+            message = {
                 "type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS",
-                "message": {{
-                    "text": {response}
-                }}
-            }}
-            """
-            )
+                "message": {"text": person},
+            }
+            await client.send_message(json.dumps(message))
         except Exception as e:
             logger.exception(f"Error during LLM processing {e}")
         finally:
@@ -48,19 +45,12 @@ async def speechToJson(in_queue, out_queue, client, asr: ASRService):
 
         logger.info(f"Received file for transcription: {filename}")
         try:
-            await client.send_message(
-                f"""
-            {{
-                "type": "EXTRACT_DATA_FROM_AUDIO_STARTING",
-                "message": {{
-                    "text": {{
-                        "fileName": "{filename}"
-                    }}
-                }}
-            }}
-            """
-            )
-            await client.send_message("test")
+            message = {
+                "type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS",
+                "message": {"fileName": filename},
+            }
+            await client.send_message(json.dumps(message))
+
             text = asr.transcribe(infile, outfile)
             await out_queue.put(text)
         except Exception as e:
@@ -78,7 +68,7 @@ async def main():
     llm_queue = asyncio.Queue()
 
     # Services
-    client = ws.WebSocketClient("ws://localhost:8080")
+    client = WebSocketClient("ws://localhost:8080")
     asr = ASRService()
     llm = LLMService()
 

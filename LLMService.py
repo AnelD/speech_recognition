@@ -34,12 +34,12 @@ class LLMService:
             {
                 "role": "system",
                 "content": (
-                    "You are Qwen, created by Alibaba Cloud. Your job is to take sentences "
+                    "You are an information extraction assistant. Your job is to take sentences "
                     "said by some people and to format them into a json format. "
                     "Don't put formatting quotes. You will usually receive a firstname, lastname, sex, "
                     "date of birth, phone number, and email address. "
                     "Make all of those separate fields in the JSON and try to replace "
-                    "'spoken at' with '@' in their email address. For sex return M (male), W (female), or D (other). "
+                    "a spoken 'at' with '@' in their email address. For sex return M (male), W (female), or D (other). "
                     "If a field is missing, set it to null. Return as plain text."
                 ),
             },
@@ -61,6 +61,6 @@ class LLMService:
         t1 = time.time()
 
         logger.info(f"Generated response in {t1 - t0:.2f} seconds.")
-        output = output.replace("```json", "").replace("```", "").strip()
         logger.debug(f"LLM raw output: {output}")
+        output = output.replace("```json", "").replace("```", "").strip()
         return output
