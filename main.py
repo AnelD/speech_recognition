@@ -12,6 +12,9 @@ from LoggerHelper import LoggerHelper
 
 logger = LoggerHelper("app_log", log_level=logging.DEBUG).get_logger()
 
+speech_event = asyncio.Event()
+llm_event = asyncio.Event()
+
 
 async def waitForInput(queue, client, llm: LLMService):
     while True:
@@ -34,7 +37,7 @@ async def waitForInput(queue, client, llm: LLMService):
         except Exception as e:
             logger.exception(f"Error during LLM processing {e}")
         finally:
-            queue.task_done()
+            llm_event.set()
 
 
 async def speechToJson(in_queue, out_queue, client, asr: ASRService):
@@ -57,16 +60,13 @@ async def speechToJson(in_queue, out_queue, client, asr: ASRService):
             }}
             """
             )
+            await client.send_message("test")
             text = asr.transcribe(infile, outfile)
             await out_queue.put(text)
         except Exception as e:
             logger.exception(f"Error transcribing {filename}: {e}")
         finally:
-            in_queue.task_done()
-
-
-speech_event = asyncio.Event()
-llm_event = asyncio.Event()
+            speech_event.set()
 
 
 async def main():
@@ -82,13 +82,13 @@ async def main():
     asr = ASRService()
     llm = LLMService()
 
+    await client.connect()
+    await client.send_message("sp")
+
     # Tasks
     asyncio.create_task(tts.text_to_speech(text_queue))
     asyncio.create_task(speechToJson(speech_queue, llm_queue, client, asr))
     asyncio.create_task(waitForInput(llm_queue, client, llm))
-
-    await client.connect()
-    await client.send_message("sp")
 
     # Start file system observer in separate thread
     path = pathlib.Path("data/in").resolve()

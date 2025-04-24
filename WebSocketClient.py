@@ -3,6 +3,7 @@ import json
 from typing import Optional
 
 import websockets
+from websockets import ConnectionClosed
 
 
 class WebSocketClient:
@@ -28,7 +29,7 @@ class WebSocketClient:
         asyncio.create_task(self.receive_messages())
 
     # ToDo add logic
-    def message_preprocessor(self, message: str):
+    def _message_preprocessor(self, message: str):
         return message
 
     async def send_message(self, message: str):
@@ -36,17 +37,17 @@ class WebSocketClient:
 
             Calls the message_preprocessor on the message before sending it.
         Args:
-            message: str: The message to send.
+            message: The message to send.
         """
         if self.ws:
-            if self.message_preprocessor:
-                message = self.message_preprocessor(message)
+            if self._message_preprocessor:
+                message = self._message_preprocessor(message)
             print(f"Sending message: {message}")
             await self.ws.send(message)
         else:
             print("Not connected to the WebSocket server.")
 
-    async def message_handler(self, message: str):
+    async def _message_handler(self, message: str):
         try:
             message = json.loads(message)
             print(f"Message received: {message}")
@@ -64,12 +65,13 @@ class WebSocketClient:
         while True:
             try:
                 raw = await self.ws.recv()
-                if self.message_handler:
-                    await self.message_handler(raw)
+                if self._message_handler:
+                    await self._message_handler(raw)
                 else:
                     print(f"Message received: {raw}")
-            except Exception as e:
-                print(e)
+            except ConnectionClosed as e:
+                print("Connection to the WebSocket server closed.", e)
+                break
 
     async def close_connection(self, message: Optional[str] = None):
         """Close the connection to the websocket server with an optional final message.

@@ -19,7 +19,8 @@ class LLMService:
         logger.info(f"Loading model: {self.model_name} on device: {self.device}")
         t0 = time.time()
         model = AutoModelForCausalLM.from_pretrained(
-            self.model_name, torch_dtype="auto", device_map="auto"
+            self.model_name,
+            torch_dtype="auto",
         ).to(self.device)
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         t1 = time.time()
