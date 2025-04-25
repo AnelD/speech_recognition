@@ -18,9 +18,10 @@ class WebSocketClient:
     def __init__(
         self,
         uri: str,
+        queue: asyncio.Queue,
     ) -> None:
         self.uri = uri
-        self.queue = None
+        self.queue = queue
         self.ws = None
 
     async def connect(self):
@@ -53,7 +54,7 @@ class WebSocketClient:
             print(f"Message received: {message}")
             if message["type"] == "GENERATE_AUDIO_REQUEST":
                 text = message["message"]["text"]
-                print("Text to generate audio from: ", message)
+                print("Text to generate audio from: ", text)
                 await self.queue.put(text)
         except Exception as e:
             print(f"Exception occurred: {e}")

@@ -6,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from LoggerHelper import LoggerHelper
 
-logger = LoggerHelper("app_log", log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
 
 class LLMService:
@@ -16,7 +16,7 @@ class LLMService:
         self.model, self.tokenizer = self._load_model()
 
     def _load_model(self):
-        logger.info(f"Loading model: {self.model_name} on device: {self.device}")
+        log.info(f"Loading model: {self.model_name} on device: {self.device}")
         t0 = time.time()
         model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
@@ -24,11 +24,11 @@ class LLMService:
         ).to(self.device)
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         t1 = time.time()
-        logger.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
+        log.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
         return model, tokenizer
 
     def generate_json_response(self, prompt: str) -> str:
-        logger.debug(f"Generating response for prompt: {prompt}")
+        log.debug(f"Generating response for prompt: {prompt}")
 
         messages = [
             {
@@ -60,7 +60,7 @@ class LLMService:
         output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         t1 = time.time()
 
-        logger.info(f"Generated response in {t1 - t0:.2f} seconds.")
-        logger.debug(f"LLM raw output: {output}")
+        log.info(f"Generated response in {t1 - t0:.2f} seconds.")
+        log.debug(f"LLM raw output: {output}")
         output = output.replace("```json", "").replace("```", "").strip()
         return output

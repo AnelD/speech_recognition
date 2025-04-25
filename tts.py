@@ -1,8 +1,12 @@
 import asyncio
+import logging
 import os
 from pathlib import Path
 
 import config
+from LoggerHelper import LoggerHelper
+
+log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
 
 async def run_command_in_subprocess(command: str, cwd: str):
@@ -13,7 +17,7 @@ async def run_command_in_subprocess(command: str, cwd: str):
         command (str): command to run
         cwd (str): directory to run the command in
     Returns:
-        None, prints stdout and stderr to console
+        None, logs stdout and stderr
     """
     proc = await asyncio.create_subprocess_shell(
         command,
@@ -26,11 +30,11 @@ async def run_command_in_subprocess(command: str, cwd: str):
     # Wait for the process to complete.
     stdout, stderr = await proc.communicate()
 
-    # Decode and print output.
+    # Log the output
     if stdout:
-        print(f"[stdout]\n{stdout.decode()}")
+        log.info(f"[stdout]\n{stdout.decode()}")
     if stderr:
-        print(f"[stderr]\n{stderr.decode()}")
+        log.info(f"[stderr]\n{stderr.decode()}")
 
 
 async def text_to_speech(queue: asyncio.Queue):
@@ -55,9 +59,9 @@ async def text_to_speech(queue: asyncio.Queue):
     # run forever waiting for inputs
     while True:
         text = await queue.get()
+        log.info(f"TTS starting with input: {text}")
         input_text = f'echo "{text}" '
-        print(input_text)
         command = input_text + command_without_input
-        print(command)
+        log.debug(f"Executing command: {command}")
 
         asyncio.create_task(run_command_in_subprocess(command, cwd=piper_dir))

@@ -11,7 +11,7 @@ from LLMService import LLMService
 from LoggerHelper import LoggerHelper
 from WebSocketClient import WebSocketClient
 
-logger = LoggerHelper("app_log", log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
 speech_event = asyncio.Event()
 llm_event = asyncio.Event()
@@ -22,7 +22,7 @@ async def waitForInput(queue, client, llm: LLMService):
         prompt = await queue.get()
 
         try:
-            logger.info(f"Received prompt: {prompt}")
+            log.info(f"Received prompt: {prompt}")
             response = llm.generate_json_response(prompt)
             person = json.loads(response)
             print(person)
@@ -32,7 +32,7 @@ async def waitForInput(queue, client, llm: LLMService):
             }
             await client.send_message(json.dumps(message))
         except Exception as e:
-            logger.exception(f"Error during LLM processing {e}")
+            log.exception(f"Error during LLM processing {e}")
         finally:
             llm_event.set()
 
@@ -43,7 +43,7 @@ async def speechToJson(in_queue, out_queue, client, asr: ASRService):
         infile = f"data/in/{filename}"
         outfile = f"data/out/{filename.rsplit('.', 1)[0]}.wav"
 
-        logger.info(f"Received file for transcription: {filename}")
+        log.info(f"Received file for transcription: {filename}")
         try:
             message = {
                 "type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS",
@@ -54,7 +54,7 @@ async def speechToJson(in_queue, out_queue, client, asr: ASRService):
             text = asr.transcribe(infile, outfile)
             await out_queue.put(text)
         except Exception as e:
-            logger.exception(f"Error transcribing {filename}: {e}")
+            log.exception(f"Error transcribing {filename}: {e}")
         finally:
             speech_event.set()
 
@@ -68,7 +68,7 @@ async def main():
     llm_queue = asyncio.Queue()
 
     # Services
-    client = WebSocketClient("ws://localhost:8080")
+    client = WebSocketClient("ws://localhost:8080", text_queue)
     asr = ASRService()
     llm = LLMService()
 
@@ -84,18 +84,18 @@ async def main():
     path = pathlib.Path("data/in").resolve()
     observer = FileSystemObserver(loop, speech_queue)
     threading.Thread(target=observer.start_observer, args=(path,), daemon=True).start()
-    logger.info(f"Started file observer on {path}")
+    log.info(f"Started file observer on {path}")
 
     # Event loop
     while True:
-        logger.debug("Waiting for both speech and LLM events to complete...")
+        log.debug("Waiting for both speech and LLM events to complete...")
         await asyncio.gather(speech_event.wait(), llm_event.wait())
 
         # Reset both events
         speech_event.clear()
         llm_event.clear()
 
-        logger.info("Ready for next job")
+        log.info("Ready for next job")
 
 
 if __name__ == "__main__":

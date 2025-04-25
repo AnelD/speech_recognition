@@ -9,6 +9,8 @@ from watchdog.observers import Observer
 
 from LoggerHelper import LoggerHelper
 
+log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
+
 
 class FileSystemObserver(FileSystemEventHandler):
     """
@@ -29,10 +31,6 @@ class FileSystemObserver(FileSystemEventHandler):
     ):
         self.loop = loop
         self.queue = queue
-        self.logger = LoggerHelper(
-            name="app_logger",
-            log_level=log_level,
-        ).get_logger()
 
         # Used to store the actual observer instance
         self.observer = None
@@ -44,7 +42,7 @@ class FileSystemObserver(FileSystemEventHandler):
         Args:
             event (FileSystemEvent): The event that occurred on the file system.
         """
-        self.logger.debug(event)
+        log.debug(event)
 
     def on_created(self, event):
         """
@@ -54,12 +52,12 @@ class FileSystemObserver(FileSystemEventHandler):
             event (FileSystemEvent): The event triggered by file creation.
         """
         filename = str(event.src_path.split(os.sep)[-1])
-        self.logger.info(f"Detected file creation: {filename}")
+        log.info(f"Detected file creation: {filename}")
 
         try:
             asyncio.run_coroutine_threadsafe(self.add_to_queue(filename), self.loop)
         except Exception as e:
-            self.logger.warning(f"Exception when adding file to queue: {e}")
+            log.warning(f"Exception when adding file to queue: {e}")
 
     async def add_to_queue(self, filename: str):
         """
@@ -68,9 +66,9 @@ class FileSystemObserver(FileSystemEventHandler):
         Args:
             filename (str): The name of the file to be added to the queue.
         """
-        self.logger.info(f"Adding to queue: {filename}")
+        log.info(f"Adding to queue: {filename}")
         await self.queue.put(filename)
-        self.logger.info(f"Successfully added: {filename}")
+        log.info(f"Successfully added: {filename}")
 
     def start_observer(self, path: str):
         """
@@ -83,7 +81,7 @@ class FileSystemObserver(FileSystemEventHandler):
         self.observer = Observer()
         self.observer.schedule(event_handler, path, recursive=False)
         self.observer.start()
-        self.logger.info(f"[Observer] Started watching {path}")
+        log.info(f"[Observer] Started watching {path}")
         self.observer.join()
 
     def stop_observer(self):
@@ -93,9 +91,9 @@ class FileSystemObserver(FileSystemEventHandler):
         """
         if self.observer is not None:
             self.observer.stop()
-            self.logger.info("[Observer] Stopping observer...")
+            log.info("[Observer] Stopping observer...")
             # Wait for the observer thread to finish
             self.observer.join()
-            self.logger.info("[Observer] Observer stopped successfully.")
+            log.info("[Observer] Observer stopped successfully.")
         else:
-            self.logger.warning("[Observer] No observer is currently running.")
+            log.warning("[Observer] No observer is currently running.")
