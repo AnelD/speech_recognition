@@ -10,6 +10,7 @@ from logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
+
 class WebSocketClient:
     """A client to handle a websocket connection.
 
