@@ -55,11 +55,11 @@ class FileSystemObserver(FileSystemEventHandler):
         log.info(f"Detected file creation: {filename}")
 
         try:
-            asyncio.run_coroutine_threadsafe(self.add_to_queue(filename), self.loop)
+            asyncio.run_coroutine_threadsafe(self._add_to_queue(filename), self.loop)
         except Exception as e:
             log.warning(f"Exception when adding file to queue: {e}")
 
-    async def add_to_queue(self, filename: str):
+    async def _add_to_queue(self, filename: str):
         """
         Asynchronously adds the filename to the processing queue.
 

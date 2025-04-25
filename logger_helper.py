@@ -52,7 +52,7 @@ class LoggerHelper:
                 utc=False,
             )
             file_handler.setFormatter(formatter)
-            file_handler.namer = custom_namer
+            file_handler.namer = _custom_namer
             self.logger.addHandler(file_handler)
 
     def get_logger(self):
@@ -60,7 +60,7 @@ class LoggerHelper:
         return self.logger
 
 
-def custom_namer(default_name: str) -> str:
+def _custom_namer(default_name: str) -> str:
     """
     Custom namer function for TimedRotatingFileHandler.
     Renames rotated log files to use the format: app_log_YYYY-MM-DD.log
