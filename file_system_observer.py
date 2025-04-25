@@ -7,7 +7,7 @@ from asyncio import Queue
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from LoggerHelper import LoggerHelper
+from logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 

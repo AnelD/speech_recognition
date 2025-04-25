@@ -1,10 +1,14 @@
 import asyncio
 import json
+import logging
 from typing import Optional
 
 import websockets
 from websockets import ConnectionClosed
 
+from logger_helper import LoggerHelper
+
+log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
 class WebSocketClient:
     """A client to handle a websocket connection.
@@ -43,21 +47,21 @@ class WebSocketClient:
         if self.ws:
             if self._message_preprocessor:
                 message = self._message_preprocessor(message)
-            print(f"Sending message: {message}")
+            log.info(f"Sending message: {message}")
             await self.ws.send(message)
         else:
-            print("Not connected to the WebSocket server.")
+            log.error("Not connected to the WebSocket server.")
 
     async def _message_handler(self, message: str):
         try:
             message = json.loads(message)
-            print(f"Message received: {message}")
+            log.info(f"Message received: {message}")
             if message["type"] == "GENERATE_AUDIO_REQUEST":
                 text = message["message"]["text"]
-                print("Text to generate audio from: ", text)
+                log.debug("Text to generate audio from: ", text)
                 await self.queue.put(text)
         except Exception as e:
-            print(f"Exception occurred: {e}")
+            log.error(f"Exception occurred: {e}")
 
     async def receive_messages(self):
         """Handles messages from the websocket server.
@@ -69,9 +73,9 @@ class WebSocketClient:
                 if self._message_handler:
                     await self._message_handler(raw)
                 else:
-                    print(f"Message received: {raw}")
+                    log.info(f"Message received: {raw}")
             except ConnectionClosed as e:
-                print("Connection to the WebSocket server closed.", e)
+                log.error("Connection to the WebSocket server closed.", e)
                 break
 
     async def close_connection(self, message: Optional[str] = None):
@@ -80,9 +84,9 @@ class WebSocketClient:
         Args:
             message: str: The message to send."""
         if self.ws:
-            print(f"Closing the connection to the WebSocket server")
+            log.info(f"Closing the connection to the WebSocket server")
             if message:
-                print(f"Sending final message: {message}")
+                log.info(f"Sending final message: {message}")
                 self.ws.send(message)
             await self.ws.close()
             self.ws = None

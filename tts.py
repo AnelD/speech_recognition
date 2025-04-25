@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import config
-from LoggerHelper import LoggerHelper
+from logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 

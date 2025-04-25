@@ -5,11 +5,11 @@ import pathlib
 import threading
 
 import tts
-from ASRService import ASRService
-from FileSystemObserver import FileSystemObserver
-from LLMService import LLMService
-from LoggerHelper import LoggerHelper
-from WebSocketClient import WebSocketClient
+from asr_service import ASRService
+from file_system_observer import FileSystemObserver
+from llm_service import LLMService
+from logger_helper import LoggerHelper
+from websocket_client import WebSocketClient
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
