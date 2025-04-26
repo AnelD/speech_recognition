@@ -62,8 +62,12 @@ def convert_audio_to_wav(infile: str, outfile: str) -> None:
         None
     """
     log.debug(f"Converting {infile} to WAV format as {outfile}")
-    sound = pydub.AudioSegment.from_file(infile)
-    sound.export(outfile, format="wav")
+    try:
+        sound = pydub.AudioSegment.from_file(infile)
+        sound.export(outfile, format="wav")
+    except Exception as e:
+        log.exception(f"Error during conversion of {infile} to WAV format: {e}")
+        raise TranscriptionError(f"Error during conversion of {infile} to WAV format")
 
 
 class TranscriptionError(Exception):
@@ -136,7 +140,7 @@ class ASRService:
                 outfile, generate_kwargs={"language": self.language}
             )
         except Exception as e:
-            log.error(f"Error while transcribing: {e}")
+            log.exception(f"Error while transcribing: {e}")
             raise TranscriptionError(f"Error while transcribing file: {outfile}")
 
         t1 = time.time()

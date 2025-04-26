@@ -17,7 +17,7 @@ speech_event = asyncio.Event()
 llm_event = asyncio.Event()
 
 
-async def waitForInput(queue, client, llm: LLMService):
+async def transcript_to_json(queue, client, llm: LLMService):
     while True:
         prompt = await queue.get()
 
@@ -37,7 +37,7 @@ async def waitForInput(queue, client, llm: LLMService):
             llm_event.set()
 
 
-async def speechToJson(in_queue, out_queue, client, asr: ASRService):
+async def speech_to_transcript(in_queue, out_queue, client, asr: ASRService):
     while True:
         filename = await in_queue.get()
         infile = f"data/in/{filename}"
@@ -77,8 +77,8 @@ async def main():
 
     # Tasks
     asyncio.create_task(tts.text_to_speech(text_queue))
-    asyncio.create_task(speechToJson(speech_queue, llm_queue, client, asr))
-    asyncio.create_task(waitForInput(llm_queue, client, llm))
+    asyncio.create_task(speech_to_transcript(speech_queue, llm_queue, client, asr))
+    asyncio.create_task(transcript_to_json(llm_queue, client, llm))
 
     # Start file system observer in separate thread
     path = pathlib.Path("data/in").resolve()
