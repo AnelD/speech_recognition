@@ -1,4 +1,5 @@
 import time
+from enum import Enum
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -9,18 +10,35 @@ from speech_recognition.logger_helper import LoggerHelper
 log = LoggerHelper(__name__).get_logger()
 
 
+class RequestType(Enum):
+    BAD_REQUEST = 1
+    PERSON_DATA = 2
+    COMMAND = 3
+
+
 class LLMService:
     """Service for loading a language model and generating structured JSON responses."""
 
-    SYSTEM_PROMPT = (
-        "You are a data extraction assistant. "
-        "Your task is to listen to people's speech transcriptions and extract personal details into a JSON object. "
-        "Required fields: firstname, lastname, sex, date_of_birth, phone_number, email_address. "
-        "If a field is missing or unclear, set its value to null. "
-        "For 'sex', use 'M' for male, 'W' for female, and 'D' for diverse/other. "
-        "Replace spoken 'at' or 'dot' appropriately in email addresses. "
-        "Return ONLY the raw JSON object, without any commentary, Markdown, or extra text."
-    )
+    DATA_PROMPT = """
+        You are a data extraction assistant. 
+        Your task is to listen to people's speech transcriptions and extract personal details into a JSON object. 
+        Required fields: firstname, lastname, sex, date_of_birth, phone_number, email_address. 
+        If a field is missing or unclear, set its value to null. 
+        For 'sex', use 'M' for male, 'W' for female, and 'D' for diverse/other. 
+        Replace spoken 'at' or 'dot' appropriately in email addresses. 
+        Return ONLY the raw JSON object, without any commentary, Markdown, or extra text.
+    """
+
+    COMMAND_PROMPT = """
+        You are a data extraction assistant. 
+        Your task is to listen to people's speech transcriptions and Classify the input text strictly:
+        Be very strict. Only classify as yes or no if it is clear.
+        If the text expresses a YES (agreement, acceptance, affirmation), output { "result": "YES" }
+        If the text expresses a NO (refusal, rejection, declination), output { "result": "NO" }
+        If the text does not express yes or no (e.g., it is off-topic, random, unrelated, 
+        like just saying a name or making a comment), output { "error": "Input is not a yes or no." }
+        Return ONLY the raw JSON object, without any commentary, Markdown, or extra text.
+    """
 
     def __init__(self) -> None:
         """Initializes the LLMService with configuration from config.py."""
@@ -48,19 +66,25 @@ class LLMService:
         log.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
         return model, tokenizer
 
-    def generate_json_response(self, prompt: str) -> str:
+    def generate_json_response(self, prompt: str, req_type: RequestType) -> str:
         """Generates a structured JSON response based on a natural language prompt.
 
         Args:
             prompt (str): The user's input text to be processed.
+            req_type (RequestType): The type of request to generate a response for.
 
         Returns:
             str: A JSON-formatted string containing the extracted information.
         """
         log.debug(f"Generating response for prompt: {prompt}")
 
+        system_prompt = (
+            self.DATA_PROMPT
+            if req_type == RequestType.PERSON_DATA
+            else self.COMMAND_PROMPT
+        )
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ]
 
@@ -75,9 +99,9 @@ class LLMService:
             max_new_tokens=512,
             # Make output more deterministic
             do_sample=False,
-            temperature=0.0,
-            top_p=1.0,
-            top_k=0,
+            temperature=None,
+            top_p=None,
+            top_k=None,
         )
         generated_ids = [
             output_ids[len(input_ids) :]
@@ -89,5 +113,5 @@ class LLMService:
         log.info(f"Generated response in {t1 - t0:.2f} seconds.")
         log.debug(f"LLM raw output: {output}")
 
-        # output = output.replace("```json", "").replace("```", "").strip()
+        output = output.replace("```json", "").replace("```", "").strip()
         return output

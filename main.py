@@ -12,6 +12,7 @@ from speech_recognition import (
     FileSystemObserver,
     config,
 )
+from speech_recognition.llm_service import RequestType
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -23,11 +24,12 @@ async def transcript_to_json(
     queue: asyncio.Queue, client: WebSocketClient, llm: LLMService
 ) -> None:
     while True:
-        prompt = await queue.get()
-
+        request = await queue.get()
+        prompt = request["prompt"]
+        req_type = request["req_type"]
         try:
-            log.info(f"Received prompt: {prompt}")
-            response = llm.generate_json_response(prompt)
+            log.info(f"Received prompt: {prompt}, for request_type: {req_type}")
+            response = llm.generate_json_response(prompt, req_type)
             person = json.loads(response)
             log.info(person)
             message = {
@@ -48,20 +50,33 @@ async def speech_to_transcript(
     asr: ASRService,
 ) -> None:
     while True:
-        filename = await in_queue.get()
+        request = await in_queue.get()
+        log.info(f"Received request: {request}")
+        filename = request["filename"]
+        req_type = request["req_type"]
+
+        if req_type == RequestType.BAD_REQUEST:
+            log.warning(f"Bad request: {filename}")
+            message = {
+                "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
+                "message": {"text": f"Bad request for file {filename}"},
+            }
+            await client.send_message(json.dumps(message))
+            continue
+
         infile = f"data/in/{filename}"
         outfile = f"data/out/{filename.rsplit('.', 1)[0]}.wav"
 
         log.info(f"Received file for transcription: {filename}")
         try:
             message = {
-                "type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS",
+                "type": "EXTRACT_DATA_FROM_AUDIO_STARTING",
                 "message": {"fileName": filename},
             }
             await client.send_message(json.dumps(message))
 
             text = asr.transcribe(infile, outfile)
-            await out_queue.put(text)
+            await out_queue.put({"prompt": text, "req_type": req_type})
         except Exception as e:
             log.exception(f"Error transcribing {filename}: {e}")
         finally:

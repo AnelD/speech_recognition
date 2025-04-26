@@ -2,11 +2,13 @@ import asyncio
 import os
 from asyncio import AbstractEventLoop
 from asyncio import Queue
+from typing import Any
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from speech_recognition import config
+from speech_recognition.llm_service import RequestType
 from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
@@ -53,22 +55,32 @@ class FileSystemObserver(FileSystemEventHandler):
         """
         filename = str(event.src_path.split(os.sep)[-1])
         log.info(f"Detected file creation: {filename}")
+        match filename.split("-")[0]:
+            case "person":
+                req_type = RequestType.PERSON_DATA
+            case "command":
+                req_type = RequestType.COMMAND
+            case _:
+                req_type = RequestType.BAD_REQUEST
 
         try:
-            asyncio.run_coroutine_threadsafe(self._add_to_queue(filename), self.loop)
+            asyncio.run_coroutine_threadsafe(
+                self._add_to_queue({"filename": filename, "req_type": req_type}),
+                self.loop,
+            )
         except Exception as e:
             log.warning(f"Exception when adding file to queue: {e}")
 
-    async def _add_to_queue(self, filename: str) -> None:
+    async def _add_to_queue(self, item: Any) -> None:
         """
-        Asynchronously adds the filename to the processing queue.
+        Asynchronously adds an item to the processing queue.
 
         Args:
-            filename (str): The name of the file to be added to the queue.
+            item (Any): The item to be added to the queue.
         """
-        log.debug(f"Adding to queue: {filename}")
-        await self.queue.put(filename)
-        log.debug(f"Successfully added: {filename}")
+        log.debug(f"Adding to queue: {item}")
+        await self.queue.put(item)
+        log.debug(f"Successfully added: {item}")
 
     def start_observer(self, path: str) -> None:
         """
