@@ -7,8 +7,8 @@ import torch
 from pydub.silence import detect_nonsilent
 from transformers import pipeline, Pipeline
 
-import config
-from logger_helper import LoggerHelper
+from .logger_helper import LoggerHelper
+from ..config import config
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 

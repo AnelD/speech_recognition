@@ -4,13 +4,15 @@ import logging
 import pathlib
 import threading
 
-import config
-import tts
-from asr_service import ASRService
-from file_system_observer import FileSystemObserver
-from llm_service import LLMService
-from logger_helper import LoggerHelper
-from websocket_client import WebSocketClient
+from config import config
+from speech_recognition import (
+    ASRService,
+    FileSystemObserver,
+    LLMService,
+    LoggerHelper,
+    WebSocketClient,
+    text_to_speech,
+)
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
 
@@ -77,7 +79,7 @@ async def main():
     await client.send_message("sp")
 
     # Tasks
-    asyncio.create_task(tts.text_to_speech(text_queue))
+    asyncio.create_task(text_to_speech(text_queue))
     asyncio.create_task(speech_to_transcript(speech_queue, llm_queue, client, asr))
     asyncio.create_task(transcript_to_json(llm_queue, client, llm))
 

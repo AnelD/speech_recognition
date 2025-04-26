@@ -4,7 +4,7 @@
 WEBSOCKET_URI = "ws://localhost:8080"
 
 # Audio directories
-DATA_AUDIO_DIR = "data/in"
+DATA_AUDIO_DIR = "../data/in"
 COMMAND_AUDIO_DIR = "data/commands"
 
 # TTS (Text-to-Speech) settings
@@ -16,7 +16,7 @@ VOICE_NAME = "de_DE-thorsten-high.onnx"
 # VOICE_NAME = "Thorsten-Voice_Hessisch_Piper_high-Oct2023.onnx"
 
 # Directory where generated audio files are stored
-GENERATE_AUDIO_DIR = "/home/anel/PycharmProjects/speech_recognition/data/generated"
+GENERATE_AUDIO_DIR = "/data/generated"
 
 # ASR (Automatic Speech Recognition) settings
 ASR_MODEL_NAME = "openai/whisper-large-v3-turbo"  # default Whisper model
