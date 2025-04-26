@@ -6,7 +6,7 @@ from asyncio import Queue
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from .logger_helper import LoggerHelper
+from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -62,9 +62,9 @@ class FileSystemObserver(FileSystemEventHandler):
         Args:
             filename (str): The name of the file to be added to the queue.
         """
-        log.info(f"Adding to queue: {filename}")
+        log.debug(f"Adding to queue: {filename}")
         await self.queue.put(filename)
-        log.info(f"Successfully added: {filename}")
+        log.debug(f"Successfully added: {filename}")
 
     def start_observer(self, path: str) -> None:
         """

@@ -3,14 +3,14 @@ import json
 import pathlib
 import threading
 
-from config import config
 from speech_recognition import (
-    ASRService,
-    FileSystemObserver,
-    LLMService,
     LoggerHelper,
     WebSocketClient,
+    LLMService,
+    ASRService,
     text_to_speech,
+    FileSystemObserver,
+    config,
 )
 
 log = LoggerHelper(__name__).get_logger()
@@ -29,7 +29,7 @@ async def transcript_to_json(
             log.info(f"Received prompt: {prompt}")
             response = llm.generate_json_response(prompt)
             person = json.loads(response)
-            print(person)
+            log.info(person)
             message = {
                 "type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS",
                 "message": {"text": person},

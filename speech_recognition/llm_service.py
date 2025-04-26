@@ -3,8 +3,8 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from .logger_helper import LoggerHelper
-from ..config import config
+from speech_recognition import config
+from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -86,5 +86,5 @@ class LLMService:
         log.info(f"Generated response in {t1 - t0:.2f} seconds.")
         log.debug(f"LLM raw output: {output}")
 
-        output = output.replace("```json", "").replace("```", "").strip()
+        # output = output.replace("```json", "").replace("```", "").strip()
         return output

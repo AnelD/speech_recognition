@@ -28,7 +28,7 @@ ASR_LANGUAGE = "german"
 LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"  # default LLM model
 
 # Logging settings available: DEBUG, INFO, WARNING, ERROR
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 
 # Log file name and location
 LOG_FILE = "logs/app.log"

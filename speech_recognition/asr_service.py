@@ -6,8 +6,8 @@ import torch
 from pydub.silence import detect_nonsilent
 from transformers import pipeline, Pipeline
 
-from .logger_helper import LoggerHelper
-from ..config import config
+from speech_recognition import config
+from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -61,7 +61,7 @@ def convert_audio_to_wav(infile: str, outfile: str) -> None:
     Returns:
         None
     """
-    log.debug(f"Converting {infile} to WAV format as {outfile}")
+    log.info(f"Converting {infile} to WAV format as {outfile}")
     try:
         sound = pydub.AudioSegment.from_file(infile)
         sound.export(outfile, format="wav")

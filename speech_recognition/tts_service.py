@@ -2,8 +2,8 @@ import asyncio
 import os
 from pathlib import Path
 
-from .logger_helper import LoggerHelper
-from ..config import config
+from speech_recognition import config
+from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 

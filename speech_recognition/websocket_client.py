@@ -5,7 +5,7 @@ from typing import Optional
 import websockets
 from websockets import ConnectionClosed
 
-from .logger_helper import LoggerHelper
+from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -58,7 +58,7 @@ class WebSocketClient:
             log.info(f"Message received: {message}")
             if message["type"] == "GENERATE_AUDIO_REQUEST":
                 text = message["message"]["text"]
-                log.debug("Text to generate audio from: ", text)
+                log.info(f"Text to generate audio from: {text}")
                 await self.queue.put(text)
         except Exception as e:
             log.error(f"Exception occurred: {e}")

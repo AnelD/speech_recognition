@@ -3,7 +3,7 @@ import os
 import time
 from logging.handlers import TimedRotatingFileHandler
 
-from ..config import config
+from speech_recognition import config
 
 
 class LoggerHelper:
