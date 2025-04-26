@@ -104,7 +104,7 @@ class ASRService:
         Returns:
             Pipeline: Loaded Hugging Face pipeline for transcription.
         """
-        log.info(f"Using device: {self.device}")
+        log.info(f"Loading Whisper: {self.model_name} on device: {self.device}")
         t0 = time.time()
         model = pipeline(model=self.model_name, device=self.device)
         t1 = time.time()
