@@ -64,7 +64,7 @@ Open a new terminal and check if it works:
 
 ``ffmpeg -version``
 
-After cloning the repository go inside the project folder and create a virtual environment
+After cloning the repository, go inside the project folder and create a virtual environment
 
 *Windows*
 <br>
@@ -73,7 +73,7 @@ After cloning the repository go inside the project folder and create a virtual e
 ``venv\Scripts\activate``
 <br>
 <br>
-Once you have the venv ready and activated your terminal should look like:
+Once you have the venv ready and activated, your terminal should look like:
 <br>
 ``(venv) C:\Users\you\...``
 <br>
@@ -91,7 +91,8 @@ Install PyTorch (Choose Your CUDA Version)
 Go to the official PyTorch installation guide:
 👉 https://pytorch.org/get-started/locally/
 
-Then run the appropriate install command. For example:
+Then run the appropriate installation command.
+For example,
 If using CUDA 12.6:
 
 ``pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126``
