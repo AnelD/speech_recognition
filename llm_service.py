@@ -4,6 +4,7 @@ import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+import config
 from logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
@@ -22,15 +23,11 @@ class LLMService:
         "Return ONLY the raw JSON object, without any commentary, Markdown, or extra text."
     )
 
-    def __init__(self, model_name: str = "Qwen/Qwen2.5-0.5B-Instruct"):
-        """Initializes the LLMService with the given model name.
+    def __init__(self):
+        """Initializes the LLMService with configuration from config.py."""
 
-        Args:
-            model_name (str, optional): Name or path of the model to load.
-            Default to "Qwen/Qwen2.5-0.5B-Instruct".
-        """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model_name = model_name
+        self.model_name = config.LLM_MODEL_NAME
         self.model, self.tokenizer = self._load_model()
 
     def _load_model(self):

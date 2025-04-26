@@ -7,6 +7,7 @@ import torch
 from pydub.silence import detect_nonsilent
 from transformers import pipeline, Pipeline
 
+import config
 from logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
@@ -90,16 +91,12 @@ class TranscriptionError(Exception):
 class ASRService:
     """Automatic Speech Recognition (ASR) service using a Hugging Face pipeline."""
 
-    def __init__(self, model_name="openai/whisper-large-v3-turbo", language="german"):
-        """Initialize the ASR service.
+    def __init__(self):
+        """Initialize the ASR service with configuration from config.py."""
 
-        Args:
-            model_name (str, optional): Model identifier from Hugging Face. Defaults to "openai/whisper-large-v3-turbo".
-            language (str, optional): Language code for transcription. Defaults to "german".
-        """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.language = language
-        self.model_name = model_name
+        self.language = config.ASR_LANGUAGE
+        self.model_name = config.ASR_MODEL_NAME
         self.transcriber = self._load_model()
 
     def _load_model(self) -> Pipeline:

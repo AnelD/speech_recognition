@@ -1,21 +1,26 @@
+"""Configuration file for setting application parameters."""
+
+# WebSocket settings
 WEBSOCKET_URI = "ws://localhost:8080"
 
-# Directory where audio files with patient data are uploaded
-DATA_AUDIO_DIR = ""
+# Audio directories
+DATA_AUDIO_DIR = "data/in"
+COMMAND_AUDIO_DIR = "data/commands"
 
-# Directory where audio files with voice commands are uploaded
-COMMAND_AUDIO_DIR = ""
-
-
-# Variables for TTS
-# Directory where your downloaded piper.exe is
+# TTS (Text-to-Speech) settings
 PIPER_DIR = "/home/anel/Desktop/piper"
 
-# The Name of the voice model you want to use for tts
-# If it's not inside the piper_dir give the full path
+# Voice model name for Piper
+# If it's not inside the PIPER_DIR, provide the full absolute path
 VOICE_NAME = "de_DE-thorsten-high.onnx"
 # VOICE_NAME = "Thorsten-Voice_Hessisch_Piper_high-Oct2023.onnx"
 
-# Where the generated audio will be saved to,
-# for relative paths keep in mind that it starts in piper_dir
+# Directory where generated audio files are stored
 GENERATE_AUDIO_DIR = "/home/anel/PycharmProjects/speech_recognition/data/generated"
+
+# ASR (Automatic Speech Recognition) settings
+ASR_MODEL_NAME = "openai/whisper-large-v3-turbo"  # default Whisper model
+ASR_LANGUAGE = "german"
+
+# LLM (Large Language Model) settings
+LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"  # default LLM model

@@ -4,6 +4,7 @@ import logging
 import pathlib
 import threading
 
+import config
 import tts
 from asr_service import ASRService
 from file_system_observer import FileSystemObserver
@@ -68,7 +69,7 @@ async def main():
     llm_queue = asyncio.Queue()
 
     # Services
-    client = WebSocketClient("ws://localhost:8080", text_queue)
+    client = WebSocketClient(config.WEBSOCKET_URI, text_queue)
     asr = ASRService()
     llm = LLMService()
 
