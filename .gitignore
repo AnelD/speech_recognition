@@ -251,6 +251,9 @@ fabric.properties
 # PyPI configuration file
 .pypirc
 
+# Ignore logs
+logs/*
+
 # Ignore the audio files used while testing, but keep base folder structure
 data/in
 !data/in/
