@@ -23,12 +23,9 @@ class FileSystemObserver(FileSystemEventHandler):
     Attributes:
         loop (AbstractEventLoop): The event loop used for scheduling tasks.
         queue (Queue): The queue to which filenames are added for processing.
-        logger (Logger): The logger used for logging file system events.
     """
 
-    def __init__(
-        self, loop: AbstractEventLoop, queue: Queue, log_level: int = logging.WARNING
-    ):
+    def __init__(self, loop: AbstractEventLoop, queue: Queue):
         self.loop = loop
         self.queue = queue
 
