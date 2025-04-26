@@ -39,6 +39,11 @@ async def transcript_to_json(
             await client.send_message(json.dumps(message))
         except Exception as e:
             log.exception(f"Error during LLM processing {e}")
+            message = {
+                "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
+                "message": {"text": f"Error while processing prompt {prompt}"},
+            }
+            await client.send_message(json.dumps(message))
         finally:
             llm_event.set()
 
@@ -79,6 +84,11 @@ async def speech_to_transcript(
             await out_queue.put({"prompt": text, "req_type": req_type})
         except Exception as e:
             log.exception(f"Error transcribing {filename}: {e}")
+            message = {
+                "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
+                "message": {"text": f"Error transcribing file {filename}"},
+            }
+            await client.send_message(json.dumps(message))
         finally:
             speech_event.set()
 
