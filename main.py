@@ -132,7 +132,7 @@ async def main():
             log.info("Ready for next job")
 
     # Graceful Shutdown,
-    # when closed with CTRL+C the currently running tasks raise CancelledError
+    # when closed with, for example, CTRL+C the currently running tasks raise CancelledError
     # The actual KeyboardInterrupt is raised outside the event loop
     except asyncio.CancelledError:
         log.info("Shutdown requested.")
