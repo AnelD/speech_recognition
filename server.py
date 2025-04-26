@@ -1,8 +1,6 @@
 import asyncio
-import threading
-import time
+import json
 
-import websockets
 from websockets import ConnectionClosed
 from websockets.asyncio.server import serve
 
@@ -46,6 +44,7 @@ from websockets.asyncio.server import serve
 #     message: Content
 #
 
+
 async def consumer_handler(websocket):
     # Handle incoming messages from the client
     try:
@@ -57,7 +56,8 @@ async def consumer_handler(websocket):
 
 async def produce():
     # This function runs input() in a thread so it doesn’t block the event loop.
-    return await asyncio.to_thread(input, "Send a message to the client: ")
+    text = await asyncio.to_thread(input, "Send a message to the client: ")
+    return json.dumps({"type": "GENERATE_AUDIO_REQUEST", "message": {"text": text}})
 
 
 async def producer_handler(websocket):
@@ -89,9 +89,9 @@ async def handler(websocket):
 
 async def main():
     print("Server starting at ws://localhost:8080")
-    async with serve(handler, host='localhost', port=8080):
+    async with serve(handler, host="localhost", port=8080):
         await asyncio.Future()  # Run forever
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
