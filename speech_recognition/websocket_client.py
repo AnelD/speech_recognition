@@ -2,8 +2,8 @@ import asyncio
 import json
 from typing import Optional
 
-import websockets
-from websockets import ConnectionClosed
+import websockets.asyncio
+from websockets import ConnectionClosedOK
 
 from speech_recognition.logger_helper import LoggerHelper
 
@@ -74,8 +74,10 @@ class WebSocketClient:
                     await self._message_handler(raw)
                 else:
                     log.info(f"Message received: {raw}")
-            except ConnectionClosed as e:
-                log.error("Connection to the WebSocket server closed.", e)
+            except ConnectionClosedOK:
+                break
+            except Exception as e:
+                log.error(f"Exception occurred: {e}")
                 break
 
     async def close_connection(self, message: Optional[str] = None) -> None:
@@ -87,6 +89,6 @@ class WebSocketClient:
             log.info(f"Closing the connection to the WebSocket server")
             if message:
                 log.info(f"Sending final message: {message}")
-                self.ws.send(message)
+                await self.ws.send(message)
             await self.ws.close()
             self.ws = None

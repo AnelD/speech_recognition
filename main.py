@@ -120,16 +120,32 @@ async def main():
     threading.Thread(target=observer.start_observer, args=(path,), daemon=True).start()
     log.info(f"Started file observer on {path}")
 
-    # Event loop
-    while True:
-        log.debug("Waiting for both speech and LLM events to complete...")
-        await asyncio.gather(speech_event.wait(), llm_event.wait())
+    try:
+        while True:
+            log.debug("Waiting for both speech and LLM events to complete...")
+            await asyncio.gather(speech_event.wait(), llm_event.wait())
 
-        # Reset both events
-        speech_event.clear()
-        llm_event.clear()
+            # Reset both events
+            speech_event.clear()
+            llm_event.clear()
 
-        log.info("Ready for next job")
+            log.info("Ready for next job")
+
+    # Graceful Shutdown,
+    # when closed with CTRL+C the currently running tasks raise CancelledError
+    # The actual KeyboardInterrupt is raised outside the event loop
+    except asyncio.CancelledError:
+        log.info("Shutdown requested.")
+    finally:
+        log.info("Cleaning up...")
+
+        # Stop observer
+        observer.stop_observer()
+
+        # Disconnect WebSocket client
+        await client.close_connection("sp Closing connection")
+
+        log.info("Shutdown complete.")
 
 
 if __name__ == "__main__":
