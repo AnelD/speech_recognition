@@ -6,6 +6,7 @@ from asyncio import Queue
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from speech_recognition import config
 from speech_recognition.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
@@ -31,6 +32,8 @@ class FileSystemObserver(FileSystemEventHandler):
         # Used to store the actual observer instance
         self.observer = None
 
+        self.log_all_events = config.LOG_ALL_EVENTS
+
     def on_any_event(self, event) -> None:
         """
         Logs any file system event.
@@ -38,7 +41,8 @@ class FileSystemObserver(FileSystemEventHandler):
         Args:
             event (FileSystemEvent): The event that occurred on the file system.
         """
-        log.debug(event)
+        if self.log_all_events:
+            log.debug(event)
 
     def on_created(self, event) -> None:
         """

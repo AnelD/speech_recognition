@@ -75,6 +75,9 @@ class LLMService:
             max_new_tokens=512,
             # Make output more deterministic
             do_sample=False,
+            temperature=0.0,
+            top_p=1.0,
+            top_k=0,
         )
         generated_ids = [
             output_ids[len(input_ids) :]
