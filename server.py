@@ -5,46 +5,6 @@ from websockets import ConnectionClosed
 from websockets.asyncio.server import serve
 
 
-# class Server:
-#     def __init__(self, host, port, q=None):
-#         self.host = host
-#         self.port = port
-#         self.q = q
-#
-#     def handler(self, websocket):
-#         for message in websocket:
-#             print(message)
-#             if self.q is not None:
-#                 self.q.put(message)
-#             websocket.send("Message received")
-#
-#
-#     def send_message(self, message):
-#         for client in self.clients:
-#             try:
-#                 client.send(message)
-#             except Exception as e:
-#                 print(f"Error sending message to client: {e}")
-#                 self.clients.remove(client)
-#
-#
-#     def start(self):
-#         with serve(self.handler, self.host, self.port) as server:
-#             print("Server started at http://{}:{}".format(self.host, self.port))
-#             server.serve_forever()
-#
-#
-# class Content(BaseModel):
-#     fileName: str
-#     text: str
-#
-#
-# class Message(BaseModel):
-#     event: str
-#     message: Content
-#
-
-
 async def consumer_handler(websocket):
     # Handle incoming messages from the client
     try:

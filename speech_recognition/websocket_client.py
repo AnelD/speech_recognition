@@ -33,10 +33,6 @@ class WebSocketClient:
         self.ws = await websockets.connect(self.uri)
         asyncio.create_task(self.receive_messages())
 
-    # ToDo add logic
-    def _message_preprocessor(self, message: str):
-        return message
-
     async def send_message(self, message: str) -> None:
         """Send the provided message to the websocket server.
 
@@ -45,8 +41,6 @@ class WebSocketClient:
             message: The message to send.
         """
         if self.ws:
-            if self._message_preprocessor:
-                message = self._message_preprocessor(message)
             log.info(f"Sending message: {message}")
             await self.ws.send(message)
         else:
