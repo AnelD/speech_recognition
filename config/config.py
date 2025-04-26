@@ -1,5 +1,7 @@
 """Configuration file for setting application parameters."""
 
+import logging
+
 # WebSocket settings
 WEBSOCKET_URI = "ws://localhost:8080"
 
@@ -24,3 +26,9 @@ ASR_LANGUAGE = "german"
 
 # LLM (Large Language Model) settings
 LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"  # default LLM model
+
+# Logging settings available: DEBUG, INFO, WARNING, ERROR
+LOG_LEVEL = logging.DEBUG
+
+# Log file name and location
+LOG_FILE = "logs/app.log"

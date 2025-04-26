@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 
@@ -10,7 +9,7 @@ from transformers import pipeline, Pipeline
 from .logger_helper import LoggerHelper
 from ..config import config
 
-log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__).get_logger()
 
 
 def is_audio_empty(
@@ -91,7 +90,7 @@ class TranscriptionError(Exception):
 class ASRService:
     """Automatic Speech Recognition (ASR) service using a Hugging Face pipeline."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the ASR service with configuration from config.py."""
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

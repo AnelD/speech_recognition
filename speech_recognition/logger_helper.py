@@ -3,6 +3,8 @@ import os
 import time
 from logging.handlers import TimedRotatingFileHandler
 
+from ..config import config
+
 
 class LoggerHelper:
     """
@@ -20,15 +22,11 @@ class LoggerHelper:
         log_level (int): Logging level (e.g., logging.INFO, logging.DEBUG).
     """
 
-    def __init__(
-        self,
-        name: str,
-        log_file: str = "logs/app.log",
-        log_level: int = logging.WARNING,
-    ):
+    def __init__(self, name: str) -> None:
         self.logger = logging.getLogger(name)
-        self.logger.setLevel(log_level)
+        self.logger.setLevel(config.LOG_LEVEL)
         self.logger.propagate = False
+        self.log_file = config.LOG_FILE
 
         if not self.logger.handlers:
             formatter = logging.Formatter(
@@ -42,9 +40,9 @@ class LoggerHelper:
             self.logger.addHandler(console_handler)
 
             # File handler with daily rotation
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
             file_handler = TimedRotatingFileHandler(
-                log_file,
+                self.log_file,
                 when="midnight",
                 interval=1,
                 backupCount=7,
@@ -55,7 +53,7 @@ class LoggerHelper:
             file_handler.namer = _custom_namer
             self.logger.addHandler(file_handler)
 
-    def get_logger(self):
+    def get_logger(self) -> logging.Logger:
         """Returns the configured logger."""
         return self.logger
 

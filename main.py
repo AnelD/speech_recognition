@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import pathlib
 import threading
 
@@ -14,13 +13,15 @@ from speech_recognition import (
     text_to_speech,
 )
 
-log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__).get_logger()
 
 speech_event = asyncio.Event()
 llm_event = asyncio.Event()
 
 
-async def transcript_to_json(queue, client, llm: LLMService):
+async def transcript_to_json(
+    queue: asyncio.Queue, client: WebSocketClient, llm: LLMService
+) -> None:
     while True:
         prompt = await queue.get()
 
@@ -40,7 +41,12 @@ async def transcript_to_json(queue, client, llm: LLMService):
             llm_event.set()
 
 
-async def speech_to_transcript(in_queue, out_queue, client, asr: ASRService):
+async def speech_to_transcript(
+    in_queue: asyncio.Queue,
+    out_queue: asyncio.Queue,
+    client: WebSocketClient,
+    asr: ASRService,
+) -> None:
     while True:
         filename = await in_queue.get()
         infile = f"data/in/{filename}"

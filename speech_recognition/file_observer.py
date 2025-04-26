@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 from asyncio import AbstractEventLoop
 from asyncio import Queue
@@ -9,7 +8,7 @@ from watchdog.observers import Observer
 
 from .logger_helper import LoggerHelper
 
-log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__).get_logger()
 
 
 class FileSystemObserver(FileSystemEventHandler):
@@ -25,14 +24,14 @@ class FileSystemObserver(FileSystemEventHandler):
         queue (Queue): The queue to which filenames are added for processing.
     """
 
-    def __init__(self, loop: AbstractEventLoop, queue: Queue):
+    def __init__(self, loop: AbstractEventLoop, queue: Queue) -> None:
         self.loop = loop
         self.queue = queue
 
         # Used to store the actual observer instance
         self.observer = None
 
-    def on_any_event(self, event):
+    def on_any_event(self, event) -> None:
         """
         Logs any file system event.
 
@@ -41,7 +40,7 @@ class FileSystemObserver(FileSystemEventHandler):
         """
         log.debug(event)
 
-    def on_created(self, event):
+    def on_created(self, event) -> None:
         """
         Handles file creation events.
 
@@ -56,7 +55,7 @@ class FileSystemObserver(FileSystemEventHandler):
         except Exception as e:
             log.warning(f"Exception when adding file to queue: {e}")
 
-    async def _add_to_queue(self, filename: str):
+    async def _add_to_queue(self, filename: str) -> None:
         """
         Asynchronously adds the filename to the processing queue.
 
@@ -67,7 +66,7 @@ class FileSystemObserver(FileSystemEventHandler):
         await self.queue.put(filename)
         log.info(f"Successfully added: {filename}")
 
-    def start_observer(self, path: str):
+    def start_observer(self, path: str) -> None:
         """
         Starts the file system observer to monitor the specified directory.
 
@@ -81,7 +80,7 @@ class FileSystemObserver(FileSystemEventHandler):
         log.info(f"[Observer] Started watching {path}")
         self.observer.join()
 
-    def stop_observer(self):
+    def stop_observer(self) -> None:
         """
         Gracefully stops the file system observer.
         This method stops the observer and joins the threads to ensure a clean shutdown.

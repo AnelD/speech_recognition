@@ -1,4 +1,3 @@
-import logging
 import time
 
 import torch
@@ -7,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from .logger_helper import LoggerHelper
 from ..config import config
 
-log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__).get_logger()
 
 
 class LLMService:
@@ -23,14 +22,14 @@ class LLMService:
         "Return ONLY the raw JSON object, without any commentary, Markdown, or extra text."
     )
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the LLMService with configuration from config.py."""
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model_name = config.LLM_MODEL_NAME
         self.model, self.tokenizer = self._load_model()
 
-    def _load_model(self):
+    def _load_model(self) -> (AutoModelForCausalLM, AutoTokenizer):
         """Loads the language model and tokenizer onto the appropriate device.
 
         Returns:

@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 from typing import Optional
 
 import websockets
@@ -8,7 +7,7 @@ from websockets import ConnectionClosed
 
 from .logger_helper import LoggerHelper
 
-log = LoggerHelper(__name__, log_level=logging.DEBUG).get_logger()
+log = LoggerHelper(__name__).get_logger()
 
 
 class WebSocketClient:
@@ -29,7 +28,7 @@ class WebSocketClient:
         self.queue = queue
         self.ws = None
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect to the websocket server at given URI."""
         self.ws = await websockets.connect(self.uri)
         asyncio.create_task(self.receive_messages())
@@ -38,7 +37,7 @@ class WebSocketClient:
     def _message_preprocessor(self, message: str):
         return message
 
-    async def send_message(self, message: str):
+    async def send_message(self, message: str) -> None:
         """Send the provided message to the websocket server.
 
             Calls the message_preprocessor on the message before sending it.
@@ -53,7 +52,7 @@ class WebSocketClient:
         else:
             log.error("Not connected to the WebSocket server.")
 
-    async def _message_handler(self, message: str):
+    async def _message_handler(self, message: str) -> None:
         try:
             message = json.loads(message)
             log.info(f"Message received: {message}")
@@ -64,7 +63,7 @@ class WebSocketClient:
         except Exception as e:
             log.error(f"Exception occurred: {e}")
 
-    async def receive_messages(self):
+    async def receive_messages(self) -> None:
         """Handles messages from the websocket server.
 
         If no handler is provided, messages will only be printed."""
@@ -79,7 +78,7 @@ class WebSocketClient:
                 log.error("Connection to the WebSocket server closed.", e)
                 break
 
-    async def close_connection(self, message: Optional[str] = None):
+    async def close_connection(self, message: Optional[str] = None) -> None:
         """Close the connection to the websocket server with an optional final message.
 
         Args:
