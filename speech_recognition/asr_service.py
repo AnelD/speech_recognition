@@ -104,9 +104,25 @@ class ASRService:
         Returns:
             Pipeline: Loaded Hugging Face pipeline for transcription.
         """
-        log.info(f"Loading Whisper: {self.model_name} on device: {self.device}")
+        model_kwargs = {
+            "device_map": "auto",
+            "torch_dtype": (
+                # if left on auto sets float16 for cpu which results in very slow transcriptions
+                torch.float16 if self.device.type == "cuda" else torch.float32
+            ),
+        }
+        log.info(
+            f"Loading Whisper: {self.model_name} with model kwargs: {model_kwargs} on device: {self.device}"
+        )
         t0 = time.time()
-        model = pipeline(model=self.model_name, device=self.device)
+        model = pipeline(
+            task="automatic-speech-recognition",
+            model=self.model_name,
+            # Makes chunks of audio with length x
+            chunk_length_s=30,
+            model_kwargs=model_kwargs,
+            # Explicitly loading the model onto a device also slows down both on cpu and gpu ???
+        )
         t1 = time.time()
         log.info(f"Whisper model loaded in {t1 - t0:.2f} seconds.")
         return model

@@ -57,7 +57,7 @@ async def speech_to_transcript(
     # Get configured filepaths, encode, and decode to handle windows paths with \
     in_path = str(Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve())
     out_path = str(
-        Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve()
+        Path(config.AUDIO_OUT_DIR.encode("unicode_escape").decode()).resolve()
     )
 
     while True:
