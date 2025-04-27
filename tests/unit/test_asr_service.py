@@ -30,7 +30,8 @@ def mock_from_file(mocker):
 
 @pytest.fixture(autouse=True)
 def disable_logging():
-    logging.disable(logging.CRITICAL)  # Disables logging during tests
+    # Disables logging during tests
+    logging.disable(logging.CRITICAL)
 
 
 # --- is_audio_empty tests ---
