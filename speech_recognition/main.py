@@ -9,7 +9,7 @@ from speech_recognition import (
     LLMService,
     ASRService,
     text_to_speech,
-    FileSystemObserver,
+    FileObserver,
     config,
 )
 
@@ -144,7 +144,7 @@ async def main():
 
     # Start file system observer in separate thread
     path = str(Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve())
-    observer = FileSystemObserver(loop, speech_queue)
+    observer = FileObserver(loop, speech_queue)
     threading.Thread(target=observer.start_observer, args=(path,), daemon=True).start()
     log.info(f"File observer watching folder: {path}")
 

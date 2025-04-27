@@ -14,7 +14,7 @@ from speech_recognition.utils.logger_helper import LoggerHelper
 log = LoggerHelper(__name__).get_logger()
 
 
-class FileSystemObserver(FileSystemEventHandler):
+class FileObserver(FileSystemEventHandler):
     """
     A class to observe file system events and handle file creation events.
 
