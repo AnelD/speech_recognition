@@ -5,7 +5,7 @@ from typing import Optional
 import websockets.asyncio
 from websockets import ConnectionClosedOK
 
-from speech_recognition.logger_helper import LoggerHelper
+from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
