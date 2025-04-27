@@ -108,7 +108,9 @@ class ASRService:
             "device_map": "auto",
             "torch_dtype": (
                 # if left on auto sets float16 for cpu which results in very slow transcriptions
-                torch.float16 if self.device.type == "cuda" else torch.float32
+                torch.float16
+                if self.device.type == "cuda"
+                else torch.float32
             ),
         }
         log.info(
