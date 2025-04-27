@@ -1,7 +1,7 @@
 import asyncio
 import json
-import pathlib
 import threading
+from pathlib import Path
 
 from speech_recognition import (
     LoggerHelper,
@@ -54,6 +54,12 @@ async def speech_to_transcript(
     client: WebSocketClient,
     asr: ASRService,
 ) -> None:
+    # Get configured filepaths, encode, and decode to handle windows paths with \
+    in_path = str(Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve())
+    out_path = str(
+        Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve()
+    )
+
     while True:
         request = await in_queue.get()
         log.info(f"Received request: {request}")
@@ -69,8 +75,8 @@ async def speech_to_transcript(
             await client.send_message(json.dumps(message))
             continue
 
-        infile = f"data/in/{filename}"
-        outfile = f"data/out/{filename.rsplit('.', 1)[0]}.wav"
+        in_file = f"{in_path}/{filename}"
+        out_file = f"{out_path}/{filename.rsplit('.', 1)[0]}.wav"
 
         log.info(f"Received file for transcription: {filename}")
         try:
@@ -80,7 +86,7 @@ async def speech_to_transcript(
             }
             await client.send_message(json.dumps(message))
 
-            text = asr.transcribe(infile, outfile)
+            text = asr.transcribe(in_file, out_file)
             await out_queue.put({"prompt": text, "req_type": req_type})
         except Exception as e:
             log.exception(f"Error transcribing {filename}: {e}")
@@ -115,7 +121,7 @@ async def main():
     asyncio.create_task(transcript_to_json(llm_queue, client, llm))
 
     # Start file system observer in separate thread
-    path = pathlib.Path("data/in").resolve()
+    path = str(Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve())
     observer = FileSystemObserver(loop, speech_queue)
     threading.Thread(target=observer.start_observer, args=(path,), daemon=True).start()
     log.info(f"Started file observer on {path}")

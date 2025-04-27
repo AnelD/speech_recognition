@@ -47,12 +47,13 @@ async def text_to_speech(queue: asyncio.Queue) -> None:
     """
 
     # configure the command with values from a config file
-    piper_dir = str(Path(config.PIPER_DIR.encode("unicode_escape").decode()))
+    piper_dir = str(Path(config.PIPER_DIR.encode("unicode_escape").decode()).resolve())
     piper_command = rf"| .{os.sep}piper "
     voice = "-m " + config.VOICE_NAME
     output_path = " -d " + str(
-        Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode())
+        Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode()).resolve()
     )
+
     command_without_input = piper_command + voice + output_path
 
     # run forever waiting for inputs
