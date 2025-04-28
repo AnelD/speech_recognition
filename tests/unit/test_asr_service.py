@@ -3,12 +3,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from speech_recognition.exceptions.transcription_error import TranscriptionError
 from speech_recognition.services.asr_service import (
-    is_audio_empty,
-    is_file_empty,
-    convert_audio_to_wav,
     ASRService,
-    TranscriptionError,
 )
 
 
@@ -32,80 +29,6 @@ def mock_from_file(mocker):
 def disable_logging():
     # Disables logging during tests
     logging.disable(logging.CRITICAL)
-
-
-# --- is_audio_empty tests ---
-@pytest.mark.parametrize("test_input,expected", [([], True), ([1, 2, 3], False)])
-def test_is_audio_empty_returns_true(
-    mocker, mock_from_file, dummy_audio_path, test_input, expected
-):
-    mocker.patch(
-        "speech_recognition.services.asr_service.detect_nonsilent",
-        return_value=test_input,
-    )
-    result = is_audio_empty(str(dummy_audio_path))
-    assert result is expected
-
-
-# --- is_file_empty tests ---
-def test_is_file_empty_small_file(mocker, dummy_audio_path):
-    mocker.patch(
-        "speech_recognition.services.asr_service.os.path.getsize", return_value=1024 * 3
-    )
-    mock_is_audio_empty = mocker.patch(
-        "speech_recognition.services.asr_service.is_audio_empty"
-    )
-    result = is_file_empty(str(dummy_audio_path))
-    assert result is True
-    mock_is_audio_empty.assert_not_called()
-
-
-def test_is_file_empty_large_file_silent(mocker, dummy_audio_path):
-    mocker.patch(
-        "speech_recognition.services.asr_service.os.path.getsize",
-        return_value=1024 * 10,
-    )
-    mock_is_audio_empty = mocker.patch(
-        "speech_recognition.services.asr_service.is_audio_empty", return_value=True
-    )
-    result = is_file_empty(str(dummy_audio_path))
-    assert result is True
-    mock_is_audio_empty.assert_called_once()
-
-
-def test_is_file_empty_large_file_non_silent(mocker, dummy_audio_path):
-    mocker.patch(
-        "speech_recognition.services.asr_service.os.path.getsize",
-        return_value=1024 * 10,
-    )
-    mock_is_audio_empty = mocker.patch(
-        "speech_recognition.services.asr_service.is_audio_empty", return_value=False
-    )
-    result = is_file_empty(str(dummy_audio_path))
-    assert result is False
-    mock_is_audio_empty.assert_called_once()
-
-
-# --- convert_audio_to_wav tests ---
-def test_convert_audio_to_wav_success(mocker, dummy_audio_path, dummy_wav_path):
-    mock_audio = mocker.MagicMock()
-    mocker.patch(
-        "speech_recognition.services.asr_service.pydub.AudioSegment.from_file",
-        return_value=mock_audio,
-    )
-
-    convert_audio_to_wav(str(dummy_audio_path), str(dummy_wav_path))
-    mock_audio.export.assert_called_once_with(str(dummy_wav_path), format="wav")
-
-
-def test_convert_audio_to_wav_failure(mocker, dummy_audio_path, dummy_wav_path):
-    mocker.patch(
-        "speech_recognition.services.asr_service.pydub.AudioSegment.from_file",
-        side_effect=Exception("Something went wrong"),
-    )
-
-    with pytest.raises(TranscriptionError):
-        convert_audio_to_wav(str(dummy_audio_path), str(dummy_wav_path))
 
 
 # --- ASRService tests ---
