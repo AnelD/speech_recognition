@@ -8,13 +8,13 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from speech_recognition import config
-from speech_recognition.llm_service import RequestType
-from speech_recognition.logger_helper import LoggerHelper
+from speech_recognition.services.llm_service import RequestType
+from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
 
-class FileSystemObserver(FileSystemEventHandler):
+class FileObserver(FileSystemEventHandler):
     """
     A class to observe file system events and handle file creation events.
 

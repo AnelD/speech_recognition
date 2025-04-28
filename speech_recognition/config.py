@@ -6,8 +6,10 @@ import logging
 WEBSOCKET_URI = "ws://localhost:8080"
 
 # Audio directories
-DATA_AUDIO_DIR = "../data/in"
-COMMAND_AUDIO_DIR = "data/commands"
+# Make sure that in and out don't point to the same folder
+AUDIO_IN_DIR = "data/in"
+AUDIO_OUT_DIR = "data/out"
+
 
 # TTS (Text-to-Speech) settings
 PIPER_DIR = "/home/anel/Desktop/piper"

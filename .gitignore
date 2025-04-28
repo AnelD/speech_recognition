@@ -253,6 +253,8 @@ fabric.properties
 
 # Ignore logs
 logs/*
+*/logs/*
+
 
 # Ignore the audio files used while testing, but keep base folder structure
 data/in

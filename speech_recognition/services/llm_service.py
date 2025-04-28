@@ -5,7 +5,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from speech_recognition import config
-from speech_recognition.logger_helper import LoggerHelper
+from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -57,8 +57,7 @@ class LLMService:
         t0 = time.time()
 
         model = AutoModelForCausalLM.from_pretrained(
-            self.model_name,
-            torch_dtype="auto",
+            self.model_name, device_map="auto", torch_dtype="auto"
         ).to(self.device)
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 

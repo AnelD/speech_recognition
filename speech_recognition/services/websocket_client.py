@@ -5,7 +5,7 @@ from typing import Optional
 import websockets.asyncio
 from websockets import ConnectionClosedOK
 
-from speech_recognition.logger_helper import LoggerHelper
+from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -53,7 +53,20 @@ class WebSocketClient:
             if message["type"] == "GENERATE_AUDIO_REQUEST":
                 text = message["message"]["text"]
                 log.info(f"Text to generate audio from: {text}")
-                await self.queue.put(text)
+                # Check that text isn't empty and doesn't only contain whitespace
+                if text.strip() and text:
+                    await self.queue.put(text)
+                else:
+                    await self.send_message(
+                        json.dumps(
+                            {
+                                "type": "GENERATE_AUDIO_ERROR",
+                                "message": {
+                                    "text": "Text to generate audio for was empty"
+                                },
+                            }
+                        )
+                    )
         except Exception as e:
             log.error(f"Exception occurred: {e}")
 
