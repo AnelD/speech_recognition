@@ -1,9 +1,28 @@
+import pytest
+
 from speech_recognition import LLMService
+from speech_recognition.exceptions.llm_processing_error import LLMProcessingError
 from speech_recognition.services.llm_service import RequestType
 
 
-def test_generate_json_response(mocker):
+@pytest.fixture
+def mock_service(mocker):
+    mocker.patch(
+        "speech_recognition.services.llm_service.AutoModelForCausalLM.from_pretrained",
+        return_value=mocker.Mock(),
+    )
+    mocker.patch(
+        "speech_recognition.services.llm_service.AutoTokenizer.from_pretrained",
+        return_value=mocker.Mock(),
+    )
 
+    return LLMService()
+
+
+# No test for _generate_output as it only calls external functions and is very annoying to test
+
+
+def test_load_model(mocker):
     mock_model = mocker.patch(
         "speech_recognition.services.llm_service.AutoModelForCausalLM.from_pretrained",
         return_value=mocker.Mock(),
@@ -14,6 +33,12 @@ def test_generate_json_response(mocker):
     )
 
     service = LLMService()
+    assert service is not None
+    mock_model.assert_called_once()
+    mock_tokenizer_patch.assert_called_once()
+
+
+def test_generate_json_response(mocker, mock_service):
 
     mock_llm = mocker.patch(
         "speech_recognition.services.llm_service.LLMService._generate_output",
@@ -21,9 +46,12 @@ def test_generate_json_response(mocker):
     )
 
     # Call the method
-    output = service.generate_json_response("yes", req_type=RequestType.COMMAND)
+    output = mock_service.generate_json_response("yes", req_type=RequestType.COMMAND)
 
     assert output == '{"result": "YES"}'
     mock_llm.assert_called_once()
-    mock_model.assert_called_once()
-    mock_tokenizer_patch.assert_called_once()
+
+
+def test_generate_json_response_fails(mock_service):
+    with pytest.raises(LLMProcessingError, match="Invalid request type"):
+        mock_service.generate_json_response("bad request", RequestType.BAD_REQUEST)

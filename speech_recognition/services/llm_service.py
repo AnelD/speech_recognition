@@ -5,6 +5,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from speech_recognition import config
+from speech_recognition.exceptions.llm_processing_error import LLMProcessingError
 from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
@@ -19,7 +20,7 @@ class RequestType(Enum):
 class LLMService:
     """Service for loading a language model and generating structured JSON responses."""
 
-    DATA_PROMPT = """
+    PERSON_DATA_PROMPT = """
         You are a data extraction assistant. 
         Your task is to listen to people's speech transcriptions and extract personal details into a JSON object. 
         Required fields: firstname, lastname, sex, date_of_birth, phone_number, email_address. 
@@ -77,18 +78,26 @@ class LLMService:
         """
         log.debug(f"Generating response for prompt: {prompt}")
 
-        system_prompt = (
-            self.DATA_PROMPT
-            if req_type == RequestType.PERSON_DATA
-            else self.COMMAND_PROMPT
-        )
+        match req_type:
+            case RequestType.PERSON_DATA:
+                system_prompt = self.PERSON_DATA_PROMPT
+            case RequestType.COMMAND:
+                system_prompt = self.COMMAND_PROMPT
+            case _:
+                log.error(f"Invalid request type: {req_type}")
+                raise LLMProcessingError(f"Invalid request type: {req_type}")
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ]
 
         t0 = time.time()
-        output = self._generate_output(messages)
+        try:
+            output = self._generate_output(messages)
+        except Exception as e:
+            log.error(f"Error generating response: {e}")
+            raise LLMProcessingError(f"Error during processing of prompt: {messages}")
         t1 = time.time()
 
         log.info(f"Generated response in {t1 - t0:.2f} seconds.")
