@@ -252,8 +252,7 @@ fabric.properties
 .pypirc
 
 # Ignore logs
-logs/*
-*/logs/*
+*logs*
 
 
 # Ignore the audio files used while testing, but keep base folder structure

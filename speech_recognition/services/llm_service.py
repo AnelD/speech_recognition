@@ -87,12 +87,22 @@ class LLMService:
             {"role": "user", "content": prompt},
         ]
 
+        t0 = time.time()
+        output = self._generate_output(messages)
+        t1 = time.time()
+
+        log.info(f"Generated response in {t1 - t0:.2f} seconds.")
+        log.debug(f"LLM raw output: {output}")
+
+        output = output.replace("```json", "").replace("```", "").strip()
+        return output
+
+    def _generate_output(self, messages):
         input_text = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
         inputs = self.tokenizer([input_text], return_tensors="pt").to(self.model.device)
 
-        t0 = time.time()
         generated_ids = self.model.generate(
             **inputs,
             max_new_tokens=512,
@@ -106,11 +116,4 @@ class LLMService:
             output_ids[len(input_ids) :]
             for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
         ]
-        output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        t1 = time.time()
-
-        log.info(f"Generated response in {t1 - t0:.2f} seconds.")
-        log.debug(f"LLM raw output: {output}")
-
-        output = output.replace("```json", "").replace("```", "").strip()
-        return output
+        return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
