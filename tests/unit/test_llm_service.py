@@ -52,6 +52,22 @@ def test_generate_json_response(mocker, mock_service):
     mock_llm.assert_called_once()
 
 
-def test_generate_json_response_fails(mock_service):
+def test_generate_json_response_bad_request(mocker, mock_service):
+    mock_llm = mocker.patch(
+        "speech_recognition.services.llm_service.LLMService._generate_output",
+        return_value='```json{"result": "YES"}```',
+    )
+
     with pytest.raises(LLMProcessingError, match="Invalid request type"):
         mock_service.generate_json_response("bad request", RequestType.BAD_REQUEST)
+
+    assert mock_llm.call_count == 0
+
+
+def test_generate_json_response_output_raises(mocker, mock_service):
+    mock_llm = mocker.patch(
+        "speech_recognition.services.llm_service.LLMService._generate_output",
+        side_effect=Exception("Something went wrong"),
+    )
+    with pytest.raises(LLMProcessingError, match="Error during processing of prompt"):
+        mock_service.generate_json_response("yes", req_type=RequestType.COMMAND)
