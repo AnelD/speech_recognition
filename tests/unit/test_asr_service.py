@@ -1,5 +1,4 @@
 import logging
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -31,16 +30,18 @@ def disable_logging():
     logging.disable(logging.CRITICAL)
 
 
-# --- ASRService tests ---
 def test_asrservice_load_model(mocker):
+    # Mock the pipeline so we don't have to load a real model
     mock_pipeline = mocker.patch("speech_recognition.services.asr_service.pipeline")
     service = ASRService()
+
     mock_pipeline.assert_called_once()
     assert service is not None
 
 
 def test_asrservice_transcribe_success(mocker, dummy_audio_path, dummy_wav_path):
-    mock_model = MagicMock(return_value={"text": "Hello world"})
+    # Mock the things as we don't want to run a real model
+    mock_model = mocker.Mock(return_value={"text": "Hello world"})
     mock_convert = mocker.patch(
         "speech_recognition.services.asr_service.convert_audio_to_wav"
     )
@@ -53,6 +54,7 @@ def test_asrservice_transcribe_success(mocker, dummy_audio_path, dummy_wav_path)
 
     service = ASRService()
     text = service.transcribe(str(dummy_audio_path), str(dummy_wav_path))
+
     assert text == "Hello world"
     mock_convert.assert_called_once()
 
@@ -60,6 +62,7 @@ def test_asrservice_transcribe_success(mocker, dummy_audio_path, dummy_wav_path)
 def test_asrservice_transcribe_empty_file_raises(
     mocker, dummy_audio_path, dummy_wav_path
 ):
+    # Mock it with a return value that results in failure
     mocker.patch(
         "speech_recognition.services.asr_service.is_file_empty", return_value=True
     )
@@ -75,7 +78,8 @@ def test_asrservice_transcribe_empty_file_raises(
 def test_asrservice_transcribe_exception_during_inference(
     mocker, dummy_audio_path, dummy_wav_path
 ):
-    mock_model = MagicMock(side_effect=Exception("Inference crashed"))
+    # Mock the model throwing an exception
+    mock_model = mocker.Mock(side_effect=Exception("Inference crashed"))
     mocker.patch("speech_recognition.services.asr_service.convert_audio_to_wav")
     mocker.patch(
         "speech_recognition.services.asr_service.is_file_empty", return_value=False

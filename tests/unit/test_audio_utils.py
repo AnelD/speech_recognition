@@ -34,9 +34,8 @@ def disable_logging():
 
 # --- is_audio_empty tests ---
 @pytest.mark.parametrize("test_input,expected", [([], True), ([1, 2, 3], False)])
-def test_is_audio_empty_returns_true(
-    mocker, mock_from_file, dummy_audio_path, test_input, expected
-):
+def test_is_audio_empty(mocker, mock_from_file, dummy_audio_path, test_input, expected):
+    # Mock with parametrized values
     mocker.patch(
         "speech_recognition.utils.audio_utils.detect_nonsilent",
         return_value=test_input,
@@ -45,8 +44,8 @@ def test_is_audio_empty_returns_true(
     assert result is expected
 
 
-# --- is_file_empty tests ---
 def test_is_file_empty_small_file(mocker, dummy_audio_path):
+    # Mock a file being passed that is smaller than the threshold
     mocker.patch(
         "speech_recognition.utils.audio_utils.os.path.getsize", return_value=1024 * 3
     )
@@ -55,10 +54,12 @@ def test_is_file_empty_small_file(mocker, dummy_audio_path):
     )
     result = is_file_empty(str(dummy_audio_path))
     assert result is True
+    # Assert that it actually returned because of the file size
     mock_is_audio_empty.assert_not_called()
 
 
 def test_is_file_empty_large_file_silent(mocker, dummy_audio_path):
+    # Mock a file being bigger than the threshold
     mocker.patch(
         "speech_recognition.utils.audio_utils.os.path.getsize",
         return_value=1024 * 10,
@@ -86,7 +87,7 @@ def test_is_file_empty_large_file_non_silent(mocker, dummy_audio_path):
 
 # --- convert_audio_to_wav tests ---
 def test_convert_audio_to_wav_success(mocker, dummy_audio_path, dummy_wav_path):
-    mock_audio = mocker.MagicMock()
+    mock_audio = mocker.Mock()
     mocker.patch(
         "speech_recognition.utils.audio_utils.pydub.AudioSegment.from_file",
         return_value=mock_audio,

@@ -1,9 +1,16 @@
 import asyncio
+import logging
 
 import pytest
 
 import speech_recognition
 import speech_recognition.services.tts_service
+
+
+@pytest.fixture(autouse=True)
+def disable_logging():
+    # Disables logging during tests
+    logging.disable(logging.CRITICAL)
 
 
 @pytest.mark.asyncio
