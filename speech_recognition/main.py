@@ -104,12 +104,24 @@ async def handle_audio_request(
         return
 
     try:
+        await client.send_message(
+            json.dumps(
+                {
+                    "type": "EXTRACT_DATA_FROM_AUDIO_STARTING",
+                    "message": {
+                        "text": f"Starting Data extraction for file {filename}"
+                    },
+                }
+            )
+        )
         text = asr.transcribe(
             f"{str(in_path)}/{filename}",
             f"{str(out_path)}/{filename.rsplit('.', 1)[0]}.wav",
         )
         await out_queue.put({"prompt": text, "req_type": req_type})
     except Exception as e:
+        log.exception(e)
+        raise e
         log.exception(f"Transcription error for {filename}: {e}")
         await client.send_message(
             json.dumps(

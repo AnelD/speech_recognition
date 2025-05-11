@@ -1,5 +1,6 @@
 import asyncio
-import time
+import glob
+import os
 
 import pytest
 
@@ -30,10 +31,33 @@ async def test_tts_it(monkeypatch):
 
     # Start the mock server
     send_queue = asyncio.Queue()
-    await asyncio.to_thread(start_mock_server, ("localhost", 8080, send_queue))
+    server_task = asyncio.create_task(
+        start_mock_server("localhost", 8080, in_queue=send_queue)
+    )
+
+    await asyncio.sleep(1)
 
     # Start the application
-    await asyncio.to_thread(main.main)
+    app_task = asyncio.create_task(main.main())
 
-    time.sleep(5)
-    await send_queue.put("Generate audio for this text")
+    # Send a message from the mockserver
+    await asyncio.sleep(1)
+    await send_queue.put("Generate some audio for this message")
+    await asyncio.sleep(1)
+    await send_queue.put(None)
+    await asyncio.sleep(5)
+
+    # Find all .wav files created during the test
+    output_dir = "../tests/data/generated"
+    wav_files = glob.glob(os.path.join(output_dir, "*.wav"))
+
+    # Assert at least one .wav file was created
+    assert len(wav_files) > 0, "No .wav files were generated"
+
+    # Clean up generated files
+    for file in wav_files:
+        os.remove(file)
+
+    # shut down
+    server_task.cancel()
+    app_task.cancel()

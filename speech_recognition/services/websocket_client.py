@@ -41,8 +41,11 @@ class WebSocketClient:
             message: The message to send.
         """
         if self.ws:
-            log.info(f"Sending message: {message}")
-            await self.ws.send(message)
+            try:
+                log.info(f"Sending message: {message}")
+                await self.ws.send(message)
+            except Exception as e:
+                raise e
         else:
             log.error("Not connected to the WebSocket server.")
 

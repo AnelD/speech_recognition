@@ -43,7 +43,7 @@ def is_file_empty(infile: str) -> bool:
         bool: True if the file is empty or contains only silence, False otherwise.
     """
     size_kb = os.path.getsize(infile) / 1024
-    if size_kb <= 4:
+    if size_kb <= 12:
         return True
     return is_audio_empty(infile)
 

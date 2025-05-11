@@ -1,17 +1,26 @@
 import asyncio
 import json
+import traceback
 
 from websockets import ConnectionClosed
 from websockets.asyncio.server import serve
 
+from speech_recognition import LoggerHelper
 
-async def consumer_handler(websocket):
+log = LoggerHelper(__name__).get_logger()
+
+
+async def consumer_handler(websocket, queue):
     # Handle incoming messages from the client
     try:
         async for message in websocket:
-            print(f"Received from client: {message}")
+            log.debug(f"Received from client: {message}")
+            if queue is not None:
+                await queue.put(message)
+                log.debug(f"Queued message: {message}")
+
     except ConnectionClosed:
-        print("Consumer: Connection closed.")
+        log.info("Consumer: Connection closed.")
 
 
 async def produce(queue):
@@ -20,6 +29,8 @@ async def produce(queue):
         text = await asyncio.to_thread(input, "Send a message to the client: ")
     else:
         text = await queue.get()
+        if text is None:  # Sentinel value for shutdown
+            return None
     return json.dumps({"type": "GENERATE_AUDIO_REQUEST", "message": {"text": text}})
 
 
@@ -28,33 +39,62 @@ async def producer_handler(websocket, queue):
     while True:
         try:
             message = await produce(queue)
+            if message is None:  # Handle shutdown
+                break
             await websocket.send(message)
         except ConnectionClosed:
             print("Producer: Connection closed.")
             break
 
 
-async def handler(websocket, queue):
-    # Use asyncio.gather to run producer and consumer concurrently.
-    consumer_task = asyncio.create_task(consumer_handler(websocket))
-    producer_task = asyncio.create_task(producer_handler(websocket, queue))
+async def handler(websocket, in_queue, out_queue):
+    try:
+        # Use asyncio.gather to run producer and consumer concurrently.
+        consumer_task = asyncio.create_task(consumer_handler(websocket, out_queue))
+        producer_task = asyncio.create_task(producer_handler(websocket, in_queue))
 
-    # Wait for either to finish (which happens on connection closure)
-    done, pending = await asyncio.wait(
-        [consumer_task, producer_task],
-        return_when=asyncio.FIRST_COMPLETED,
-    )
+        # Wait for either to finish (which happens on connection closure)
+        done, pending = await asyncio.wait(
+            [consumer_task, producer_task],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
 
-    # Cancel any pending tasks
-    for task in pending:
-        task.cancel()
+        # Cancel any pending tasks
+        for task in pending:
+            task.cancel()
+    except Exception as e:
+        log.error(f"{e}")
+        traceback.print_exc()
+        raise e
 
 
-async def start_mock_server(host="localhost", port=8080, queue=None):
-    print("Server starting at ws://localhost:8080")
-    async with serve(lambda ws, path: handler(ws, path, queue), host, port):
-        await asyncio.Future()  # Run forever
+def create_handler(in_queue, out_queue):
+    async def wrapped_handler(websocket):
+        await handler(websocket, in_queue, out_queue)
+
+    return wrapped_handler
+
+
+async def start_mock_server(host="localhost", port=8080, in_queue=None, out_queue=None):
+    log.info("Server starting at ws://localhost:8080")
+    try:
+        server = await serve(create_handler(in_queue, out_queue), host, port)
+        return server
+    except Exception as e:
+        log.error(f"{e}")
+        traceback.print_exc()
+        raise e
+
+
+def serve_mock(host="localhost", port=8080, in_queue=None, out_queue=None):
+    async def run_server():
+        server = await start_mock_server(host, port, in_queue, out_queue)
+        while True:
+            await asyncio.sleep(1)  # Keep the server alive
+
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(run_server())
 
 
 if __name__ == "__main__":
-    asyncio.run(start_mock_server())
+    serve_mock()

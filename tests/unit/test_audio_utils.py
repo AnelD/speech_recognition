@@ -62,7 +62,7 @@ def test_is_file_empty_large_file_silent(mocker, dummy_audio_path):
     # Mock a file being bigger than the threshold
     mocker.patch(
         "speech_recognition.utils.audio_utils.os.path.getsize",
-        return_value=1024 * 10,
+        return_value=1024 * 15,
     )
     mock_is_audio_empty = mocker.patch(
         "speech_recognition.utils.audio_utils.is_audio_empty", return_value=True
@@ -75,7 +75,7 @@ def test_is_file_empty_large_file_silent(mocker, dummy_audio_path):
 def test_is_file_empty_large_file_non_silent(mocker, dummy_audio_path):
     mocker.patch(
         "speech_recognition.utils.audio_utils.os.path.getsize",
-        return_value=1024 * 10,
+        return_value=1024 * 15,
     )
     mock_is_audio_empty = mocker.patch(
         "speech_recognition.utils.audio_utils.is_audio_empty", return_value=False

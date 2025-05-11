@@ -59,7 +59,7 @@ class LLMService:
 
         model = AutoModelForCausalLM.from_pretrained(
             self.model_name, device_map="auto", torch_dtype="auto"
-        ).to(self.device)
+        )
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
         t1 = time.time()
