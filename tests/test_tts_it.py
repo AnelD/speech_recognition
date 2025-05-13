@@ -46,7 +46,7 @@ async def test_tts_it(monkeypatch):
     await asyncio.sleep(1)
 
     # Start the application
-    app_task = asyncio.create_task(main.main())
+    asyncio.create_task(main.main())
 
     # Send a message from the mockserver
     await asyncio.sleep(1)

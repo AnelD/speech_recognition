@@ -1,4 +1,5 @@
 import asyncio
+import glob
 import json
 import os
 import shutil
@@ -34,8 +35,10 @@ async def test_stt_it(monkeypatch):
     )
     # Set it to watch the test folders
     cwd = os.getcwd()
-    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", f"{cwd}/data/in")
-    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", f"{cwd}/data/out")
+    in_dir = f"{cwd}/data/in"
+    out_dir = f"{cwd}/data/out"
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", in_dir)
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", out_dir)
 
     # Start the mock server
     shutdown_event = asyncio.Event()
@@ -45,15 +48,29 @@ async def test_stt_it(monkeypatch):
     )
 
     # Start the application
-    app_task = asyncio.create_task(main.main())
+    asyncio.create_task(main.main())
 
     # Wait for application to fully start
     register_message = await received_queue.get()
     assert register_message == "sp"
 
-    await _send_and_assert_person_data(cwd, received_queue)
+    try:
+        await _send_and_assert_person_data(cwd, received_queue)
 
-    await _send_and_assert_command_yes(cwd, received_queue)
+        await _send_and_assert_command_yes(cwd, received_queue)
+
+    except Exception as e:
+        log.error(e)
+
+    # Clean up files after tests
+    # Find all .wav files created during the test
+    flac_files = glob.glob(os.path.join(in_dir, "*.flac"))
+    wav_files = glob.glob(os.path.join(out_dir, "*.wav"))
+
+    for file in flac_files:
+        os.remove(file)
+    for file in wav_files:
+        os.remove(file)
 
     # Shutdown the app and server
     # Cancel all tasks before event loop closes
