@@ -105,3 +105,10 @@ def test_convert_audio_to_wav_failure(mocker, dummy_audio_path, dummy_wav_path):
 
     with pytest.raises(TranscriptionError):
         convert_audio_to_wav(str(dummy_audio_path), str(dummy_wav_path))
+
+
+def test_filetype_not_supported(tmp_path, dummy_wav_path):
+    path = tmp_path / "file.mb3"
+
+    with pytest.raises(TranscriptionError):
+        convert_audio_to_wav(str(path), str(dummy_wav_path))
