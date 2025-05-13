@@ -1,5 +1,6 @@
 import asyncio
 import json
+import threading
 import traceback
 
 from websockets import ConnectionClosed
@@ -86,14 +87,34 @@ async def start_mock_server(host="localhost", port=8080, in_queue=None, out_queu
         raise e
 
 
-def serve_mock(host="localhost", port=8080, in_queue=None, out_queue=None):
+def serve_mock(
+    host="localhost", port=8080, in_queue=None, out_queue=None, shutdown_event=None
+):
     async def run_server():
         server = await start_mock_server(host, port, in_queue, out_queue)
         while True:
             await asyncio.sleep(1)  # Keep the server alive
+            if shutdown_event.is_set():
+                server.close()
 
     loop = asyncio.new_event_loop()
     loop.run_until_complete(run_server())
+
+
+def start_server_thread(
+    in_queue=asyncio.Queue(), out_queue=asyncio.Queue(), shutdown_event=None
+):
+    thread = threading.Thread(
+        target=serve_mock,
+        kwargs={
+            "in_queue": in_queue,
+            "out_queue": out_queue,
+            "shutdown_event": shutdown_event,
+        },
+        daemon=True,
+    )
+    thread.start()
+    return thread
 
 
 if __name__ == "__main__":

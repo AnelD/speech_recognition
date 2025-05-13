@@ -1,12 +1,18 @@
 import asyncio
 import glob
 import os
+from pathlib import Path
 
 import pytest
 
 import speech_recognition
 from speech_recognition import main
-from tests.mock_server import start_mock_server
+from tests.mock_server import start_server_thread
+
+
+@pytest.fixture(autouse=True, scope="session")
+def change_test_dir():
+    os.chdir(Path(__file__).parent)
 
 
 @pytest.mark.asyncio
@@ -25,14 +31,16 @@ async def test_tts_it(monkeypatch):
         speech_recognition.config, "WEBSOCKET_URI", "ws://localhost:8080"
     )
     # generate audio in test folder
+    cwd = os.getcwd()
     monkeypatch.setattr(
-        speech_recognition.config, "GENERATE_AUDIO_DIR", "../tests/data/generated"
+        speech_recognition.config, "GENERATE_AUDIO_DIR", cwd + "/data/generated"
     )
 
     # Start the mock server
+    shutdown_event = asyncio.Event()
     send_queue = asyncio.Queue()
-    server_task = asyncio.create_task(
-        start_mock_server("localhost", 8080, in_queue=send_queue)
+    server_thread = start_server_thread(
+        in_queue=send_queue, shutdown_event=shutdown_event
     )
 
     await asyncio.sleep(1)
@@ -58,6 +66,12 @@ async def test_tts_it(monkeypatch):
     for file in wav_files:
         os.remove(file)
 
-    # shut down
-    server_task.cancel()
-    app_task.cancel()
+    # Shutdown the app and server
+    # Cancel all tasks before event loop closes
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+    # Set shutdown event for server
+    shutdown_event.set()
+    server_thread.join(timeout=5)
