@@ -61,26 +61,28 @@ async def test_stt_it(monkeypatch):
 
     except Exception as e:
         log.error(e)
+        pytest.fail(e)
 
-    # Clean up files after tests
-    # Find all .wav files created during the test
-    flac_files = glob.glob(os.path.join(in_dir, "*.flac"))
-    wav_files = glob.glob(os.path.join(out_dir, "*.wav"))
+    finally:
+        # Clean up files after tests
+        # Find all .wav files created during the test
+        flac_files = glob.glob(os.path.join(in_dir, "*.flac"))
+        wav_files = glob.glob(os.path.join(out_dir, "*.wav"))
 
-    for file in flac_files:
-        os.remove(file)
-    for file in wav_files:
-        os.remove(file)
+        for file in flac_files:
+            os.remove(file)
+        for file in wav_files:
+            os.remove(file)
 
-    # Shutdown the app and server
-    # Cancel all tasks before event loop closes
-    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    for task in tasks:
-        task.cancel()
-    await asyncio.gather(*tasks, return_exceptions=True)
-    # Set shutdown event for server
-    shutdown_event.set()
-    server_thread.join(timeout=5)
+        # Shutdown the app and server
+        # Cancel all tasks before event loop closes
+        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        # Set shutdown event for server
+        shutdown_event.set()
+        server_thread.join(timeout=5)
 
 
 async def _send_and_assert_person_data(cwd, received_queue):
