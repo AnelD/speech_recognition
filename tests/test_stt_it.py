@@ -34,8 +34,8 @@ async def test_stt_it(monkeypatch):
     )
     # Set it to watch the test folders
     cwd = os.getcwd()
-    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", cwd + "/data/in")
-    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", cwd + "/data/out")
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", f"{cwd}/data/in")
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", f"{cwd}/data/out")
 
     # Start the mock server
     shutdown_event = asyncio.Event()
@@ -68,8 +68,8 @@ async def test_stt_it(monkeypatch):
 
 async def _send_and_assert_person_data(cwd, received_queue):
     # Move a file to the watched directory
-    src = Path(cwd + "/data/test_audios/person-test.flac").resolve()
-    dest = Path(cwd + "/data/in/person-test.flac").resolve()
+    src = Path(f"{cwd}/data/test_audios/person-test.flac").resolve()
+    dest = Path(f"{cwd}/data/in/person-test.flac").resolve()
     # Delete the previous one if it exists so new event is sent out
     if os.path.exists(dest):
         os.remove(dest)
@@ -95,23 +95,25 @@ async def _send_and_assert_person_data(cwd, received_queue):
 
 
 async def _send_and_assert_command_yes(cwd, received_queue):
-    # Move a file to the watched directory
-    src = Path(cwd + "/data/test_audios/command-test-ja.flac").resolve()
-    dest = Path(cwd + "/data/in/command-test-ja.flac").resolve()
-    # Delete the previous one if it exists so new event is sent out
-    if os.path.exists(dest):
-        os.remove(dest)
-    shutil.copy(src, dest)
-    while True:
-        resp = await received_queue.get()
-        json_resp = json.loads(resp)
-        log.debug(json_resp)
-        if json_resp["type"] == "EXTRACT_DATA_FROM_AUDIO_STARTING":
-            continue
-        if json_resp["type"] == "EXTRACT_DATA_FROM_AUDIO_SUCCESS":
-            assert json_resp["message"]["text"] == {
-                "result": "YES",
-            }
-            break
-        else:
-            pytest.fail("Received unknown message type")
+    inputs = ["yes", "no"]
+    for input in inputs:
+        # Move a file to the watched directory
+        src = Path(f"{cwd}/data/test_audios/command-test-{input}.flac").resolve()
+        dest = Path(f"{cwd}/data/in/command-test-{input}.flac").resolve()
+        # Delete the previous one if it exists so new event is sent out
+        if os.path.exists(dest):
+            os.remove(dest)
+        shutil.copy(src, dest)
+        while True:
+            resp = await received_queue.get()
+            json_resp = json.loads(resp)
+            log.debug(json_resp)
+            if json_resp["type"] == "EXTRACT_DATA_FROM_AUDIO_STARTING":
+                continue
+            if json_resp["type"] == "EXTRACT_DATA_FROM_AUDIO_SUCCESS":
+                assert json_resp["message"]["text"] == {
+                    "result": f"{input.upper()}",
+                }
+                break
+            else:
+                pytest.fail("Received unknown message type")
