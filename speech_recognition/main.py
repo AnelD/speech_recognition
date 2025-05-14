@@ -55,7 +55,8 @@ async def handle_llm_request(
                 {
                     "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
                     "message": {
-                        "text": f"Error while processing prompt {prompt} for request {req_type}"
+                        "text": f"Error while processing prompt {prompt} for request {req_type}",
+                        "exception": e,
                     },
                 }
             )
@@ -120,14 +121,15 @@ async def handle_audio_request(
         )
         await out_queue.put({"prompt": text, "req_type": req_type})
     except Exception as e:
-        log.exception(e)
-        raise e
         log.exception(f"Transcription error for {filename}: {e}")
         await client.send_message(
             json.dumps(
                 {
                     "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
-                    "message": {"text": f"Error transcribing file {filename}"},
+                    "message": {
+                        "text": f"Error transcribing file {filename}",
+                        "Exception": e,
+                    },
                 }
             )
         )
