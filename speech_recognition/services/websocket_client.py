@@ -98,7 +98,12 @@ class WebSocketClient:
         if self.ws:
             log.info(f"Closing the connection to the WebSocket server")
             if message:
-                log.info(f"Sending final message: {message}")
-                await self.ws.send(message)
+                try:
+                    log.info(f"Sending final message: {message}")
+                    await self.ws.send(message)
+                except ConnectionClosedOK:
+                    log.info(
+                        "Server already closed the connection couldn't send final message"
+                    )
             await self.ws.close()
             self.ws = None

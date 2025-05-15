@@ -48,7 +48,7 @@ async def test_stt_it(monkeypatch):
     )
 
     # Start the application
-    asyncio.create_task(main.main())
+    app_task = asyncio.create_task(main.main())
 
     # Wait for application to fully start
     register_message = await received_queue.get()
@@ -75,11 +75,9 @@ async def test_stt_it(monkeypatch):
             os.remove(file)
 
         # Shutdown the app and server
-        # Cancel all tasks before event loop closes
-        tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-        for task in tasks:
-            task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
+        app_task.cancel()
+        await app_task
+
         # Set shutdown event for server
         shutdown_event.set()
         server_thread.join(timeout=5)

@@ -10,7 +10,7 @@ log = LoggerHelper(__name__).get_logger()
 
 async def main():
     log.info("Initializing...")
-    manager = Manager().start()
+    manager = await Manager().start()
     log.info("Initialization complete.")
     try:
         while True:
@@ -20,6 +20,7 @@ async def main():
     # when closed with, for example, CTRL+C the currently running tasks raise CancelledError
     # The actual KeyboardInterrupt is raised outside the event loop
     except asyncio.CancelledError:
+        log.info("Cancellation requested.")
         await manager.stop()
         log.info("Cancellation complete.")
 
