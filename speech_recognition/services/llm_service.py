@@ -20,7 +20,7 @@ class RequestType(Enum):
 class LLMService:
     """Service for loading a language model and generating structured JSON responses."""
 
-    PERSON_DATA_PROMPT = """
+    _PERSON_DATA_PROMPT = """
         You are a data extraction assistant. 
         Your task is to listen to people's speech transcriptions and extract personal details into a JSON object. 
         Required fields: firstname, lastname, sex, date_of_birth, phone_number, email_address. 
@@ -30,7 +30,7 @@ class LLMService:
         Return ONLY the raw JSON object, without any commentary, Markdown, or extra text.
     """
 
-    COMMAND_PROMPT = """
+    _COMMAND_PROMPT = """
         You are a data extraction assistant. 
         Your task is to listen to people's speech transcriptions and Classify the input text strictly:
         Be very strict. Only classify as yes or no if it is clear.
@@ -48,24 +48,6 @@ class LLMService:
         self.model_name = config.LLM_MODEL_NAME
         self.model, self.tokenizer = self._load_model()
 
-    def _load_model(self) -> (AutoModelForCausalLM, AutoTokenizer):
-        """Loads the language model and tokenizer onto the appropriate device.
-
-        Returns:
-            tuple: The loaded model and tokenizer.
-        """
-        log.info(f"Loading model: {self.model_name} on device: {self.device}")
-        t0 = time.time()
-
-        model = AutoModelForCausalLM.from_pretrained(
-            self.model_name, device_map="auto", torch_dtype="auto"
-        )
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-
-        t1 = time.time()
-        log.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
-        return model, tokenizer
-
     def generate_json_response(self, prompt: str, req_type: RequestType) -> str:
         """Generates a structured JSON response based on a natural language prompt.
 
@@ -80,9 +62,9 @@ class LLMService:
 
         match req_type:
             case RequestType.PERSON_DATA:
-                system_prompt = self.PERSON_DATA_PROMPT
+                system_prompt = self._PERSON_DATA_PROMPT
             case RequestType.COMMAND:
-                system_prompt = self.COMMAND_PROMPT
+                system_prompt = self._COMMAND_PROMPT
             case _:
                 log.error(f"Invalid request type: {req_type}")
                 raise LLMProcessingError(f"Invalid request type: {req_type}")
@@ -105,6 +87,24 @@ class LLMService:
 
         output = output.replace("```json", "").replace("```", "").strip()
         return output
+
+    def _load_model(self) -> (AutoModelForCausalLM, AutoTokenizer):
+        """Loads the language model and tokenizer onto the appropriate device.
+
+        Returns:
+            tuple: The loaded model and tokenizer.
+        """
+        log.info(f"Loading model: {self.model_name} on device: {self.device}")
+        t0 = time.time()
+
+        model = AutoModelForCausalLM.from_pretrained(
+            self.model_name, device_map="auto", torch_dtype="auto"
+        )
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+
+        t1 = time.time()
+        log.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
+        return model, tokenizer
 
     def _generate_output(self, messages):
         input_text = self.tokenizer.apply_chat_template(

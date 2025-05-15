@@ -36,6 +36,34 @@ class FileObserver(FileSystemEventHandler):
 
         self.log_all_events = config.LOG_ALL_EVENTS
 
+    def start_observer(self, path: str) -> None:
+        """
+        Starts the file system observer to monitor the specified directory.
+
+        Args:
+            path (str): The directory path to monitor for file system events.
+        """
+        event_handler = self  # Use the current instance as the event handler
+        self.observer = Observer()
+        self.observer.schedule(event_handler, path, recursive=False)
+        self.observer.start()
+        log.info(f"[Observer] Started watching {path}")
+        self.observer.join()
+
+    def stop_observer(self) -> None:
+        """
+        Gracefully stops the file system observer.
+        This method stops the observer and joins the threads to ensure a clean shutdown.
+        """
+        if self.observer is not None:
+            self.observer.stop()
+            log.info("[Observer] Stopping observer...")
+            # Wait for the observer thread to finish
+            self.observer.join()
+            log.info("[Observer] Observer stopped successfully.")
+        else:
+            log.warning("[Observer] No observer is currently running.")
+
     def on_any_event(self, event) -> None:
         """
         Logs any file system event.
@@ -81,31 +109,3 @@ class FileObserver(FileSystemEventHandler):
         log.debug(f"Adding to queue: {item}")
         await self.queue.put(item)
         log.debug(f"Successfully added: {item}")
-
-    def start_observer(self, path: str) -> None:
-        """
-        Starts the file system observer to monitor the specified directory.
-
-        Args:
-            path (str): The directory path to monitor for file system events.
-        """
-        event_handler = self  # Use the current instance as the event handler
-        self.observer = Observer()
-        self.observer.schedule(event_handler, path, recursive=False)
-        self.observer.start()
-        log.info(f"[Observer] Started watching {path}")
-        self.observer.join()
-
-    def stop_observer(self) -> None:
-        """
-        Gracefully stops the file system observer.
-        This method stops the observer and joins the threads to ensure a clean shutdown.
-        """
-        if self.observer is not None:
-            self.observer.stop()
-            log.info("[Observer] Stopping observer...")
-            # Wait for the observer thread to finish
-            self.observer.join()
-            log.info("[Observer] Observer stopped successfully.")
-        else:
-            log.warning("[Observer] No observer is currently running.")

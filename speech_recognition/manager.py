@@ -11,9 +11,9 @@ from speech_recognition import (
     ASRService,
     LLMService,
     LoggerHelper,
-    text_to_speech,
     FileObserver,
 )
+from speech_recognition.services.tts_service import TTSService
 
 log = LoggerHelper(__name__).get_logger()
 
@@ -47,6 +47,7 @@ class Manager:
         self.client = WebSocketClient(config.WEBSOCKET_URI, self.text_queue)
         self.asr = ASRService()
         self.llm = LLMService()
+        self.tts_service = TTSService(self.text_queue)
         self.file_observer, self.observer_thread = self._start_file_observer()
 
         self.tasks = []
@@ -61,7 +62,7 @@ class Manager:
         await self.client.send_message("sp")
 
         # Create Tasks
-        self.tasks.append(asyncio.create_task(text_to_speech(self.text_queue)))
+        self.tasks.append(asyncio.create_task(self.tts_service.text_to_speech()))
         self.tasks.append(asyncio.create_task(self._handle_audio()))
 
         log.info("Manager started")
