@@ -13,7 +13,7 @@ log = LoggerHelper(__name__).get_logger()
 
 class AudioHelper:
     def __init__(self):
-        self._supported_formats = self._get_ffmpeg_decoding_formats
+        self._supported_formats = self._get_ffmpeg_decoding_formats()
 
     def is_file_empty(self, infile: str) -> bool:
         """Check if a file is empty based on file size or audio content.

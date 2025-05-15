@@ -5,7 +5,7 @@ from transformers import pipeline, Pipeline
 
 from speech_recognition import config
 from speech_recognition.exceptions.transcription_error import TranscriptionError
-from speech_recognition.utils.audio_utils import AudioHelper
+from speech_recognition.utils.audio_helper import AudioHelper
 from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()

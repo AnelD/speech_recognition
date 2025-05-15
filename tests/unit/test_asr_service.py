@@ -42,33 +42,37 @@ def test_asrservice_load_model(mocker):
 def test_asrservice_transcribe_success(mocker, dummy_audio_path, dummy_wav_path):
     # Mock the things as we don't want to run a real model
     mock_model = mocker.Mock(return_value={"text": "Hello world"})
-    mock_convert = mocker.patch(
-        "speech_recognition.services.asr_service.convert_audio_to_wav"
-    )
-    mocker.patch(
-        "speech_recognition.services.asr_service.is_file_empty", return_value=False
-    )
     mocker.patch(
         "speech_recognition.services.asr_service.pipeline", return_value=mock_model
     )
+
+    # Mock AudioHelper in the service
+    mock_audio_helper = mocker.patch(
+        "speech_recognition.services.asr_service.AudioHelper"
+    ).return_value
+    mock_audio_helper.convert_audio_to_wav.return_value = None
+    mock_audio_helper.is_file_empty.return_value = False
 
     service = ASRService()
     text = service.transcribe(str(dummy_audio_path), str(dummy_wav_path))
 
     assert text == "Hello world"
-    mock_convert.assert_called_once()
+    mock_audio_helper.convert_audio_to_wav.assert_called_once()
 
 
 def test_asrservice_transcribe_empty_file_raises(
     mocker, dummy_audio_path, dummy_wav_path
 ):
+    # Mock the AudioHelper
+    mock_audio_helper = mocker.patch(
+        "speech_recognition.services.asr_service.AudioHelper"
+    ).return_value
     # Mock it with a return value that results in failure
-    mocker.patch(
-        "speech_recognition.services.asr_service.is_file_empty", return_value=True
-    )
-    mocker.patch(
-        "speech_recognition.services.asr_service.pipeline",
-    )
+    mock_audio_helper.is_file_empty.return_value = True
+    mock_audio_helper.convert_audio_to_wav.return_value = None
+
+    mocker.patch("speech_recognition.services.asr_service.pipeline")
+
     service = ASRService()
 
     with pytest.raises(TranscriptionError, match="empty or contains only silence"):
@@ -78,12 +82,15 @@ def test_asrservice_transcribe_empty_file_raises(
 def test_asrservice_transcribe_exception_during_inference(
     mocker, dummy_audio_path, dummy_wav_path
 ):
+    # Mock the AudioHelper
+    mock_audio_helper = mocker.patch(
+        "speech_recognition.services.asr_service.AudioHelper"
+    ).return_value
+    mock_audio_helper.convert_audio_to_wav.return_value = None
+    mock_audio_helper.is_file_empty.return_value = False
+
     # Mock the model throwing an exception
     mock_model = mocker.Mock(side_effect=Exception("Inference crashed"))
-    mocker.patch("speech_recognition.services.asr_service.convert_audio_to_wav")
-    mocker.patch(
-        "speech_recognition.services.asr_service.is_file_empty", return_value=False
-    )
     mocker.patch(
         "speech_recognition.services.asr_service.pipeline", return_value=mock_model
     )
