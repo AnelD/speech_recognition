@@ -55,7 +55,8 @@ async def handle_llm_request(
                 {
                     "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
                     "message": {
-                        "text": f"Error while processing prompt {prompt} for request {req_type}"
+                        "text": f"Error while processing prompt {prompt} for request {req_type}",
+                        "exception": e,
                     },
                 }
             )
@@ -104,6 +105,16 @@ async def handle_audio_request(
         return
 
     try:
+        await client.send_message(
+            json.dumps(
+                {
+                    "type": "EXTRACT_DATA_FROM_AUDIO_STARTING",
+                    "message": {
+                        "text": f"Starting Data extraction for file {filename}"
+                    },
+                }
+            )
+        )
         text = asr.transcribe(
             f"{str(in_path)}/{filename}",
             f"{str(out_path)}/{filename.rsplit('.', 1)[0]}.wav",
@@ -115,7 +126,10 @@ async def handle_audio_request(
             json.dumps(
                 {
                     "type": "EXTRACT_DATA_FROM_AUDIO_ERROR",
-                    "message": {"text": f"Error transcribing file {filename}"},
+                    "message": {
+                        "text": f"Error transcribing file {filename}",
+                        "Exception": e,
+                    },
                 }
             )
         )

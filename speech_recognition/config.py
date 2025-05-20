@@ -7,27 +7,27 @@ WEBSOCKET_URI = "ws://localhost:8080"
 
 # Audio directories
 # Make sure that in and out don't point to the same folder
-AUDIO_IN_DIR = "data/in"
-AUDIO_OUT_DIR = "data/out"
+AUDIO_IN_DIR = "../data/in"
+AUDIO_OUT_DIR = "../data/out"
 
 
 # TTS (Text-to-Speech) settings
 PIPER_DIR = "/home/anel/Desktop/piper"
-
 # Voice model name for Piper
 # If it's not inside the PIPER_DIR, provide the full absolute path
 VOICE_NAME = "de_DE-thorsten-high.onnx"
 # VOICE_NAME = "Thorsten-Voice_Hessisch_Piper_high-Oct2023.onnx"
-
 # Directory where generated audio files are stored
-GENERATE_AUDIO_DIR = "/data/generated"
+GENERATE_AUDIO_DIR = "../data/generated"
 
 # ASR (Automatic Speech Recognition) settings
-ASR_MODEL_NAME = "openai/whisper-large-v3-turbo"  # default Whisper model
+# Default: openai/whisper-large-v3-turbo
+ASR_MODEL_NAME = "openai/whisper-large-v3-turbo"
 ASR_LANGUAGE = "german"
 
 # LLM (Large Language Model) settings
-LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"  # default LLM model
+# Default: Qwen/Qwen2.5-0.5B-Instruct
+LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 
 # Logging settings available: DEBUG, INFO, WARNING, ERROR
 LOG_LEVEL = logging.DEBUG

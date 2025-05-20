@@ -5,6 +5,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from speech_recognition import config
+from speech_recognition.exceptions.llm_processing_error import LLMProcessingError
 from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
@@ -19,7 +20,7 @@ class RequestType(Enum):
 class LLMService:
     """Service for loading a language model and generating structured JSON responses."""
 
-    DATA_PROMPT = """
+    PERSON_DATA_PROMPT = """
         You are a data extraction assistant. 
         Your task is to listen to people's speech transcriptions and extract personal details into a JSON object. 
         Required fields: firstname, lastname, sex, date_of_birth, phone_number, email_address. 
@@ -58,7 +59,7 @@ class LLMService:
 
         model = AutoModelForCausalLM.from_pretrained(
             self.model_name, device_map="auto", torch_dtype="auto"
-        ).to(self.device)
+        )
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
         t1 = time.time()
@@ -77,22 +78,40 @@ class LLMService:
         """
         log.debug(f"Generating response for prompt: {prompt}")
 
-        system_prompt = (
-            self.DATA_PROMPT
-            if req_type == RequestType.PERSON_DATA
-            else self.COMMAND_PROMPT
-        )
+        match req_type:
+            case RequestType.PERSON_DATA:
+                system_prompt = self.PERSON_DATA_PROMPT
+            case RequestType.COMMAND:
+                system_prompt = self.COMMAND_PROMPT
+            case _:
+                log.error(f"Invalid request type: {req_type}")
+                raise LLMProcessingError(f"Invalid request type: {req_type}")
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ]
 
+        t0 = time.time()
+        try:
+            output = self._generate_output(messages)
+        except Exception as e:
+            log.error(f"Error generating response: {e}")
+            raise LLMProcessingError(f"Error during processing of prompt: {messages}")
+        t1 = time.time()
+
+        log.info(f"Generated response in {t1 - t0:.2f} seconds.")
+        log.debug(f"LLM raw output: {output}")
+
+        output = output.replace("```json", "").replace("```", "").strip()
+        return output
+
+    def _generate_output(self, messages):
         input_text = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
         inputs = self.tokenizer([input_text], return_tensors="pt").to(self.model.device)
 
-        t0 = time.time()
         generated_ids = self.model.generate(
             **inputs,
             max_new_tokens=512,
@@ -106,11 +125,4 @@ class LLMService:
             output_ids[len(input_ids) :]
             for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
         ]
-        output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        t1 = time.time()
-
-        log.info(f"Generated response in {t1 - t0:.2f} seconds.")
-        log.debug(f"LLM raw output: {output}")
-
-        output = output.replace("```json", "").replace("```", "").strip()
-        return output
+        return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]

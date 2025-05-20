@@ -28,8 +28,8 @@ async def test_on_created_real_queue(tmp_path, test_input, expected):
     queue = asyncio.Queue()
     file_observer = FileObserver(loop, queue)
 
+    # Create fake events for every corresponding filename and RequestType
     event = FileCreatedEvent(src_path=str(tmp_path / test_input))
-
     file_observer.on_created(event)
 
     await asyncio.sleep(0.1)
@@ -50,7 +50,6 @@ async def test_add_to_queue(tmp_path):
 
     await file_observer._add_to_queue(test_item)
 
-    # Verify
     assert not queue.empty()
     item = await queue.get()
     assert item == test_item
@@ -66,13 +65,13 @@ def test_start_observer(mocker, tmp_path):
         "speech_recognition.services.file_observer.Observer"
     ).return_value
 
-    # Act
     mock_observer.start.return_value = None
     mock_observer.join.return_value = None
 
+    # Start the observer
     file_observer.start_observer(str(tmp_path))
 
-    # Assert
+    # Assert that things happened
     mock_observer.schedule.assert_called_once_with(
         file_observer, str(tmp_path), recursive=False
     )
@@ -89,9 +88,9 @@ def test_stop_observer(mocker):
     mock_observer = mocker.Mock()
     file_observer.observer = mock_observer
 
-    # Act
+    # Stop the observer
     file_observer.stop_observer()
 
-    # Assert
+    # Assert that it was actually stopped
     mock_observer.stop.assert_called_once()
     mock_observer.join.assert_called_once()

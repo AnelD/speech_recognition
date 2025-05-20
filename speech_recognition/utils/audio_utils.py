@@ -1,4 +1,7 @@
 import os
+import subprocess
+from functools import cache
+from typing import Set
 
 import pydub
 from pydub.silence import detect_nonsilent
@@ -43,7 +46,7 @@ def is_file_empty(infile: str) -> bool:
         bool: True if the file is empty or contains only silence, False otherwise.
     """
     size_kb = os.path.getsize(infile) / 1024
-    if size_kb <= 4:
+    if size_kb <= 12:
         return True
     return is_audio_empty(infile)
 
@@ -58,10 +61,90 @@ def convert_audio_to_wav(infile: str, outfile: str) -> None:
     Returns:
         None
     """
+    if not _is_file_format_supported(infile):
+        log.exception(f"File format of {infile} is not supported.")
+        raise TranscriptionError(f"File format of {infile} is not supported.")
+
     log.info(f"Converting {infile} to WAV format as {outfile}")
+
     try:
         sound = pydub.AudioSegment.from_file(infile)
         sound.export(outfile, format="wav")
     except Exception as e:
         log.exception(f"Error during conversion of {infile} to WAV format: {e}")
         raise TranscriptionError(f"Error during conversion of {infile} to WAV format")
+
+
+@cache
+def _get_ffmpeg_decoding_formats() -> Set[str]:
+    """
+    Cached function to get supported ffmpeg decoding formats.
+    """
+    log.info("Getting supported ffmpeg decoding formats")
+    # run ffmpeg -formats to get supported formats
+    result = subprocess.run(
+        ["ffmpeg", "-formats"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    lines = result.stdout.splitlines()
+
+    # Parse stdout, the output is structured like this
+    #
+    # ffmpeg version, lib infos...
+    # lib versions
+    # File formats:
+    # D. = Demuxing supported
+    # .E = Muxing supported
+    #  --
+    # DE mp3 MP (MPEG audio layer 3)
+    # ...
+    #
+    # So we want to start parsing the lines after the --
+    # Extract the flags and the format
+    # We only care about Decoding and then turning into a .wav
+    # so we only add formats which have the D flag
+    decoding_formats = set()
+    start_parsing = False
+    for line in lines:
+        if line.strip().startswith("--"):
+            start_parsing = True
+            continue
+        if start_parsing:
+            flags = line[:3]
+            parts = line[3:].strip().split()
+            if not parts:
+                continue
+            # for some reason this line exists
+            # D  mov,mp4,m4a,3gp,3g2,mj2 QuickTime / MOV
+            # so we also need to split the fmt by ,
+            fmts = parts[0].split(",")
+            for fmt in fmts:
+                if "D" in flags:
+                    decoding_formats.add(fmt.lower())
+
+    log.info("Supported formats will now be cached")
+    return decoding_formats
+
+
+def _is_file_format_supported(filepath: str) -> bool:
+    """
+    Checks if the file extension of `filepath` is in the list of formats
+    supported for decoding by ffmpeg.
+    """
+    log.info(f"Checking if {filepath} is supported by ffmpeg")
+    supported_formats = _get_ffmpeg_decoding_formats()
+    _, ext = os.path.splitext(filepath)
+    ext = ext.lower().lstrip(".")
+
+    return ext in supported_formats
+
+
+if __name__ == "__main__":
+    print(_get_ffmpeg_decoding_formats())
+    print(_get_ffmpeg_decoding_formats())
+    print(_is_file_format_supported("test.mp3"))
+    print(_is_file_format_supported("test.m4a"))
+    print(_is_file_format_supported("test.m4b"))
+    convert_audio_to_wav("test.m4b", "test.wav")
