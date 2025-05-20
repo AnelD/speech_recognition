@@ -1,0 +1,97 @@
+@startuml
+title Startup
+
+participant Server
+participant Main
+participant Manager
+participant WebSocketClient
+participant ASRService
+participant LLMService
+participant TTSService
+participant FileObserver
+participant Thread
+
+create Manager
+activate Main
+Main-> Manager : Manager()
+
+create WebSocketClient
+activate Manager
+Manager -> WebSocketClient : WebSocketClient()
+WebSocketClient -> Manager : WebSocketClient
+
+create ASRService
+Manager -> ASRService : ASRService()
+activate ASRService
+ASRService -> ASRService : __load_model()
+activate ASRService
+return Model
+return ASRService
+
+create LLMService
+Manager -> LLMService : LLMService()
+activate LLMService
+LLMService -> LLMService : __load_model()
+activate LLMService
+return [Model, Tokenizer]
+return LLMService
+
+
+create TTSService
+Manager -> TTSService : TTSService()
+activate TTSService
+return TTSService
+
+
+Manager -> Manager : __start_file_observer()
+activate Manager
+create FileObserver
+Manager -> FileObserver : FileObserver()
+activate FileObserver
+return FileObserver
+create Thread
+Manager -> Thread : Thread()
+activate Thread
+return Thread
+return [FileObserver, Thread]
+return Manager
+
+
+Main -> Manager : start()
+activate Manager
+Manager -> Thread : start()
+activate Thread
+Thread -> FileObserver : start()
+activate FileObserver
+create Observer
+FileObserver -> Observer : Observer()
+activate Observer
+return Observer
+FileObserver -> Observer : schedule()
+activate Observer
+FileObserver -> Observer : start()
+return
+return
+return
+
+Manager -> WebSocketClient : connect()
+activate WebSocketClient
+WebSocketClient -> WebSocketClient : asyncio.create_task()
+activate WebSocketClient
+return
+Manager -> WebSocketClient : send_message()
+activate WebSocketClient
+WebSocketClient -> Server : sp
+return
+loop WebSocket handshake
+    WebSocketClient <-> Server : Keep alive ping
+end
+
+Manager -> Manager : asyncio.create_task()
+activate Manager
+return Coroutine
+Manager -> Manager : asyncio.create_task()
+activate Manager
+return Coroutine
+
+@enduml

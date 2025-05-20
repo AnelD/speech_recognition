@@ -1,0 +1,60 @@
+@startuml
+title STT
+
+participant Server
+participant WebSocketClient
+participant FileSystem
+participant FileObserver
+participant SpeechQueue
+participant Manager
+participant ASRService
+participant AudioHelper
+participant LLMQueue
+participant LLMService
+
+
+Server -> FileSystem : file upload
+FileSystem -> FileObserver : on_created()
+activate FileObserver
+FileObserver -> SpeechQueue : put({"person-test.m4a", RequestType.PERSON_DATA})
+deactivate
+
+Manager -> SpeechQueue : get()
+Activate SpeechQueue
+return {"person-test.m4a", RequestType.PERSON_DATA}
+activate Manager
+Manager -> Manager : __transcribe_audio({"person-test.m4a", RequestType.PERSON_DATA})
+activate Manager
+Manager -> WebSocketClient : send_message({"EXTRACT_DATA_FROM_AUDIO_STARTING", "message"})
+activate WebSocketClient
+WebSocketClient -> Server : {"EXTRACT_DATA_FROM_AUDIO_STARTING", "message"}
+return
+Manager -> ASRService : transcribe("person-test.m4a", "person-test.wav")
+activate ASRService
+ASRService -> AudioHelper : is_file_empty("person-test.m4a")
+activate AudioHelper
+AudioHelper -> AudioHelper : __is_audio_empty("person-test.m4a")
+return
+ASRService -> AudioHelper : convert_audio_to_wav("person-test.m4a", "person-test.wav")
+activate AudioHelper
+AudioHelper -> AudioHelper : __is_file_format_supported("person-test.m4a")
+return
+ASRService -> ASRService : transcriber("person-test.wav", language)
+return "text"
+Manager -> LLMQueue : put({"Transkript der audio", RequestType.PERSON_DATA})
+deactivate
+Manager -> LLMQueue : get()
+Manager -> Manager : __extract_data_from_transcript({"Transkript der audio", RequestType.PERSON_DATA})
+activate Manager
+Manager -> LLMService : generate_json_response({"Transkript der audio", RequestType.PERSON_DATA})
+activate LLMService
+LLMService -> LLMService : __generate_output(prompt)
+return "data"
+Manager -> WebSocketClient : send_message({"EXTRACT_DATA_FROM_AUDIO_SUCCESS", "data"})
+deactivate
+deactivate
+activate WebSocketClient
+WebSocketClient -> Server : {"EXTRACT_DATA_FROM_AUDIO_SUCCESS", "data"}
+deactivate
+
+@enduml
