@@ -2,7 +2,12 @@ import time
 from enum import Enum
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    PreTrainedTokenizerFast,
+    PreTrainedModel,
+)
 
 from speech_recognition import config
 from speech_recognition.exceptions.llm_processing_error import LLMProcessingError
@@ -20,7 +25,7 @@ class RequestType(Enum):
 class LLMService:
     """Service for loading a language model and generating structured JSON responses."""
 
-    _PERSON_DATA_PROMPT = """
+    __PERSON_DATA_PROMPT = """
         You are a data extraction assistant. 
         Your task is to listen to people's speech transcriptions and extract personal details into a JSON object. 
         Required fields: firstname, lastname, sex, date_of_birth, phone_number, email_address. 
@@ -30,7 +35,7 @@ class LLMService:
         Return ONLY the raw JSON object, without any commentary, Markdown, or extra text.
     """
 
-    _COMMAND_PROMPT = """
+    __COMMAND_PROMPT = """
         You are a data extraction assistant. 
         Your task is to listen to people's speech transcriptions and Classify the input text strictly:
         Be very strict. Only classify as yes or no if it is clear.
@@ -44,9 +49,9 @@ class LLMService:
     def __init__(self) -> None:
         """Initializes the LLMService with configuration from config.py."""
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model_name = config.LLM_MODEL_NAME
-        self.model, self.tokenizer = self._load_model()
+        self.__device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.__model_name = config.LLM_MODEL_NAME
+        self.__model, self.__tokenizer = self.__load_model()
 
     def generate_json_response(self, prompt: str, req_type: RequestType) -> str:
         """Generates a structured JSON response based on a natural language prompt.
@@ -62,9 +67,9 @@ class LLMService:
 
         match req_type:
             case RequestType.PERSON_DATA:
-                system_prompt = self._PERSON_DATA_PROMPT
+                system_prompt = self.__PERSON_DATA_PROMPT
             case RequestType.COMMAND:
-                system_prompt = self._COMMAND_PROMPT
+                system_prompt = self.__COMMAND_PROMPT
             case _:
                 log.error(f"Invalid request type: {req_type}")
                 raise LLMProcessingError(f"Invalid request type: {req_type}")
@@ -76,7 +81,7 @@ class LLMService:
 
         t0 = time.time()
         try:
-            output = self._generate_output(messages)
+            output = self.__generate_output(messages)
         except Exception as e:
             log.error(f"Error generating response: {e}")
             raise LLMProcessingError(f"Error during processing of prompt: {messages}")
@@ -88,31 +93,15 @@ class LLMService:
         output = output.replace("```json", "").replace("```", "").strip()
         return output
 
-    def _load_model(self) -> (AutoModelForCausalLM, AutoTokenizer):
-        """Loads the language model and tokenizer onto the appropriate device.
-
-        Returns:
-            tuple: The loaded model and tokenizer.
-        """
-        log.info(f"Loading model: {self.model_name} on device: {self.device}")
-        t0 = time.time()
-
-        model = AutoModelForCausalLM.from_pretrained(
-            self.model_name, device_map="auto", torch_dtype="auto"
-        )
-        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-
-        t1 = time.time()
-        log.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
-        return model, tokenizer
-
-    def _generate_output(self, messages):
-        input_text = self.tokenizer.apply_chat_template(
+    def __generate_output(self, messages) -> str:
+        input_text = self.__tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        inputs = self.tokenizer([input_text], return_tensors="pt").to(self.model.device)
+        inputs = self.__tokenizer([input_text], return_tensors="pt").to(
+            self.__model.device
+        )
 
-        generated_ids = self.model.generate(
+        generated_ids = self.__model.generate(
             **inputs,
             max_new_tokens=512,
             # Make output more deterministic
@@ -125,4 +114,22 @@ class LLMService:
             output_ids[len(input_ids) :]
             for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
         ]
-        return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        return self.__tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+    def __load_model(self) -> tuple[PreTrainedModel, PreTrainedTokenizerFast]:
+        """Loads the language model and tokenizer onto the appropriate device.
+
+        Returns:
+            tuple: The loaded model and tokenizer.
+        """
+        log.info(f"Loading model: {self.__model_name} on device: {self.__device}")
+        t0 = time.time()
+
+        model = AutoModelForCausalLM.from_pretrained(
+            self.__model_name, device_map="auto", torch_dtype="auto"
+        )
+        tokenizer = AutoTokenizer.from_pretrained(self.__model_name)
+
+        t1 = time.time()
+        log.info(f"LLM model loaded in {t1 - t0:.2f} seconds.")
+        return model, tokenizer

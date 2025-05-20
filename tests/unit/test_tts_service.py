@@ -29,7 +29,7 @@ async def test_run_command_in_subprocess_logs_stdout_and_stderr(mocker, monkeypa
     service = speech_recognition.services.tts_service.TTSService(asyncio.Queue())
 
     # Run it
-    await service._run_command_in_subprocess("echo hi")
+    await service._TTSService__run_command_in_subprocess("echo hi")
 
     # Assert it was called correctly
     mock_proc.communicate.assert_called_once()
@@ -58,7 +58,7 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
 
     # Replace real _run_command_in_subprocess so we can look at the args it was called with
     mock_run = mocker.AsyncMock()
-    mocker.patch.object(service, "_run_command_in_subprocess", mock_run)
+    mocker.patch.object(service, "_TTSService__run_command_in_subprocess", mock_run)
 
     # Await for the task to start
     task = asyncio.create_task(service.text_to_speech())

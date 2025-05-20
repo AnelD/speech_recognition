@@ -36,8 +36,7 @@ def test_is_audio_empty(mocker, mock_from_file, dummy_audio_path, test_input, ex
         "speech_recognition.utils.audio_helper.detect_nonsilent",
         return_value=test_input,
     )
-    helper = AudioHelper()
-    result = helper._is_audio_empty(str(dummy_audio_path))
+    result = AudioHelper._AudioHelper__is_audio_empty(str(dummy_audio_path))
     assert result is expected
 
 
@@ -48,7 +47,7 @@ def test_is_file_empty_small_file(mocker, dummy_audio_path):
         return_value=1024 * 3,
     )
     mock_is_audio_empty = mocker.patch(
-        "speech_recognition.utils.audio_helper.AudioHelper._is_audio_empty"
+        "speech_recognition.utils.audio_helper.AudioHelper._AudioHelper__is_audio_empty"
     )
     helper = AudioHelper()
     result = helper.is_file_empty(str(dummy_audio_path))
@@ -64,7 +63,7 @@ def test_is_file_empty_large_file_silent(mocker, dummy_audio_path):
         return_value=1024 * 15,
     )
     mock_is_audio_empty = mocker.patch(
-        "speech_recognition.utils.audio_helper.AudioHelper._is_audio_empty",
+        "speech_recognition.utils.audio_helper.AudioHelper._AudioHelper__is_audio_empty",
         return_value=True,
     )
     helper = AudioHelper()
@@ -79,7 +78,7 @@ def test_is_file_empty_large_file_non_silent(mocker, dummy_audio_path):
         return_value=1024 * 15,
     )
     mock_is_audio_empty = mocker.patch(
-        "speech_recognition.utils.audio_helper.AudioHelper._is_audio_empty",
+        "speech_recognition.utils.audio_helper.AudioHelper._AudioHelper__is_audio_empty",
         return_value=False,
     )
     helper = AudioHelper()

@@ -7,8 +7,9 @@ from pathlib import Path
 
 import pytest
 
+import main
 import speech_recognition
-from speech_recognition import main, LoggerHelper
+from speech_recognition import LoggerHelper
 from tests.mock_server import start_server_thread
 
 log = LoggerHelper(__name__).get_logger()

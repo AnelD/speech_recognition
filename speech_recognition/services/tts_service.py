@@ -11,10 +11,10 @@ log = LoggerHelper(__name__).get_logger()
 class TTSService:
 
     def __init__(self, queue: asyncio.Queue) -> None:
-        self.queue = queue
+        self.__queue = queue
 
         # get piper directory
-        self.piper_dir = str(
+        self.__piper_dir = str(
             Path(config.PIPER_DIR.encode("unicode_escape").decode()).resolve()
         )
 
@@ -25,7 +25,7 @@ class TTSService:
             Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode()).resolve()
         )
 
-        self.prepared_command = piper_command + voice + output_path
+        self.__prepared_command = piper_command + voice + output_path
 
     async def text_to_speech(self) -> None:
         """
@@ -39,15 +39,15 @@ class TTSService:
 
         # run forever waiting for inputs
         while True:
-            text = await self.queue.get()
+            text = await self.__queue.get()
             log.info(f"TTS starting with input: {text}")
             input_text = f'echo "{text}" '
-            command = input_text + self.prepared_command
+            command = input_text + self.__prepared_command
             log.debug(f"Executing command: {command}")
 
-            asyncio.create_task(self._run_command_in_subprocess(command))
+            asyncio.create_task(self.__run_command_in_subprocess(command))
 
-    async def _run_command_in_subprocess(self, command: str) -> None:
+    async def __run_command_in_subprocess(self, command: str) -> None:
         """
         Run a command in a subprocess shell, it awaits the command execution.
 
@@ -62,7 +62,7 @@ class TTSService:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             shell=True,
-            cwd=self.piper_dir,
+            cwd=self.__piper_dir,
         )
 
         # Wait for the process to complete.

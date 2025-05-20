@@ -13,7 +13,7 @@ log = LoggerHelper(__name__).get_logger()
 
 class AudioHelper:
     def __init__(self):
-        self._supported_formats = self._get_ffmpeg_decoding_formats()
+        self.__supported_formats = self.__get_ffmpeg_decoding_formats()
 
     def is_file_empty(self, infile: str) -> bool:
         """Check if a file is empty based on file size or audio content.
@@ -27,7 +27,7 @@ class AudioHelper:
         size_kb = os.path.getsize(infile) / 1024
         if size_kb <= 12:
             return True
-        return self._is_audio_empty(infile)
+        return self.__is_audio_empty(infile)
 
     def convert_audio_to_wav(self, infile: str, outfile: str) -> None:
         """Convert an input audio file to WAV format.
@@ -39,7 +39,7 @@ class AudioHelper:
         Returns:
             None
         """
-        if not self._is_file_format_supported(infile):
+        if not self.__is_file_format_supported(infile):
             log.exception(f"File format of {infile} is not supported.")
             raise TranscriptionError(f"File format of {infile} is not supported.")
 
@@ -54,7 +54,7 @@ class AudioHelper:
                 f"Error during conversion of {infile} to WAV format"
             )
 
-    def _is_file_format_supported(self, filepath: str) -> bool:
+    def __is_file_format_supported(self, filepath: str) -> bool:
         """
         Checks if the file extension of `filepath` is in the list of formats
         supported for decoding by ffmpeg.
@@ -63,10 +63,10 @@ class AudioHelper:
         _, ext = os.path.splitext(filepath)
         ext = ext.lower().lstrip(".")
 
-        return ext in self._supported_formats
+        return ext in self.__supported_formats
 
     @staticmethod
-    def _is_audio_empty(
+    def __is_audio_empty(
         infile: str, min_silence_len: int = 100, silence_thresh: int = -50
     ) -> bool:
         """Check if an audio file is empty or contains only silence.
@@ -90,7 +90,7 @@ class AudioHelper:
         return len(nonsilent) == 0
 
     @staticmethod
-    def _get_ffmpeg_decoding_formats() -> Set[str]:
+    def __get_ffmpeg_decoding_formats() -> Set[str]:
         """
         Cached function to get supported ffmpeg decoding formats.
         """
@@ -144,10 +144,10 @@ class AudioHelper:
 
 if __name__ == "__main__":
     audio_helper = AudioHelper()
-    print(audio_helper._supported_formats)
-    print(audio_helper._get_ffmpeg_decoding_formats())
-    print(audio_helper._get_ffmpeg_decoding_formats())
-    print(audio_helper._is_file_format_supported("test.mp3"))
-    print(audio_helper._is_file_format_supported("test.m4a"))
-    print(audio_helper._is_file_format_supported("test.m4b"))
+    print(audio_helper.__supported_formats)
+    print(audio_helper.__get_ffmpeg_decoding_formats())
+    print(audio_helper.__get_ffmpeg_decoding_formats())
+    print(audio_helper.__is_file_format_supported("test.mp3"))
+    print(audio_helper.__is_file_format_supported("test.m4a"))
+    print(audio_helper.__is_file_format_supported("test.m4b"))
     audio_helper.convert_audio_to_wav("test.m4b", "test.wav")
