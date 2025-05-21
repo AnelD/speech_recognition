@@ -61,25 +61,8 @@ class LoggerHelper:
                 datefmt="%H:%M:%S",
             )
             file_handler.setFormatter(file_formatter)
-            file_handler.namer = _custom_namer
             self.logger.addHandler(file_handler)
 
     def get_logger(self) -> logging.Logger:
         """Returns the configured logger."""
         return self.logger
-
-
-def _custom_namer(default_name: str) -> str:
-    """
-    Custom namer function for TimedRotatingFileHandler.
-    Renames rotated log files to use the format: app_log_YYYY-MM-DD.log
-
-    Parameters:
-        default_name (str): The default filename provided by the handler.
-
-    Returns:
-        str: A modified filename including a timestamp in the desired format.
-    """
-    base, ext = os.path.splitext(default_name)
-    date_str = base.split(".")[-1]
-    return f"logs/app_log_{date_str}.log"
