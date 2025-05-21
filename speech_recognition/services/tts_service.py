@@ -1,8 +1,11 @@
 import asyncio
+import json
 import os
+from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
-from speech_recognition import config
+from speech_recognition import config, WebSocketClient
 from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
@@ -10,8 +13,9 @@ log = LoggerHelper(__name__).get_logger()
 
 class TTSService:
 
-    def __init__(self, queue: asyncio.Queue) -> None:
+    def __init__(self, queue: asyncio.Queue, client: WebSocketClient) -> None:
         self.__queue = queue
+        self.__client = client
 
         # get piper directory
         self.__piper_dir = str(
@@ -31,8 +35,6 @@ class TTSService:
         """
         Turn a text message into an audio file.
 
-        Args:
-            queue (asyncio.Queue): asyncio.Queue from which to get the text
         Returns:
              None
         """
@@ -42,12 +44,35 @@ class TTSService:
             text = await self.__queue.get()
             log.info(f"TTS starting with input: {text}")
             input_text = f'echo "{text}" '
-            command = input_text + self.__prepared_command
+            file_name = datetime.now().strftime("%Y_%m_%d_%H:%M:%S") + ".wav"
+            command = f"{input_text} {self.__prepared_command} -f {file_name}"
             log.debug(f"Executing command: {command}")
 
-            asyncio.create_task(self.__run_command_in_subprocess(command))
+            res = await self.__run_command_in_subprocess(command)
+            if file_name in res:
+                await self.__client.send_message(
+                    json.dumps(
+                        {
+                            "type": "GENERATE_AUDIO_SUCCESS",
+                            "message": {
+                                "text": f"Successfully generated audio file: {file_name}",
+                            },
+                        }
+                    )
+                )
+            else:
+                await self.__client.send_message(
+                    json.dumps(
+                        {
+                            "type": "GENERATE_AUDIO_ERROR",
+                            "message": {
+                                "text": f"Error while generating audio file: {res}"
+                            },
+                        }
+                    )
+                )
 
-    async def __run_command_in_subprocess(self, command: str) -> None:
+    async def __run_command_in_subprocess(self, command: str) -> Optional[str]:
         """
         Run a command in a subprocess shell, it awaits the command execution.
 
@@ -55,7 +80,7 @@ class TTSService:
             command (str): command to run
             cwd (str): directory to run the command in
         Returns:
-            None, logs stdout and stderr
+            Optional[str]: filename of the created audio file if successful, None otherwise
         """
         proc = await asyncio.create_subprocess_shell(
             command,
@@ -69,7 +94,10 @@ class TTSService:
         stdout, stderr = await proc.communicate()
 
         # Log the output
-        if stdout:
-            log.info(f"[stdout]\n{stdout.decode()}")
         if stderr:
-            log.info(f"[stderr]\n{stderr.decode()}")
+            log.debug(f"[stderr]\n{stderr.decode()}")
+        if stdout:
+            log.debug(f"[stdout]\n{stdout.decode()}")
+            return stdout.decode()
+
+        return None

@@ -38,7 +38,7 @@ class Manager:
         # Queues
         self.__text_queue = asyncio.Queue()
         self.__speech_queue = asyncio.Queue()
-        self._llm_queue = asyncio.Queue()
+        self.__llm_queue = asyncio.Queue()
 
         # Events
         self.__speech_event = asyncio.Event()
@@ -48,7 +48,7 @@ class Manager:
         self.__client = WebSocketClient(config.WEBSOCKET_URI, self.__text_queue)
         self.__asr = ASRService()
         self.__llm = LLMService()
-        self.__tts = TTSService(self.__text_queue)
+        self.__tts = TTSService(self.__text_queue, self.__client)
         self.__file_observer, self.__observer_thread = self.__start_file_observer()
 
     async def start(self) -> Self:
@@ -108,7 +108,7 @@ class Manager:
             log.info(f"Received request: {request}")
             await self.__transcribe_audio(request)
             self.__speech_event.set()
-            transcript = await self._llm_queue.get()
+            transcript = await self.__llm_queue.get()
             await self.__extract_data_from_transcript(transcript)
             self.__llm_event.set()
             log.info(f"Finished handling request: {request}")
@@ -145,7 +145,7 @@ class Manager:
                 f"{str(self.__IN_DIR)}/{filename}",
                 f"{str(self.__OUT_DIR)}/{filename.rsplit('.', 1)[0]}.wav",
             )
-            await self._llm_queue.put({"prompt": text, "req_type": req_type})
+            await self.__llm_queue.put({"prompt": text, "req_type": req_type})
         except Exception as e:
             log.exception(f"Transcription error for {filename}: {e}")
             await self.__client.send_message(
