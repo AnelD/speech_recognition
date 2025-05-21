@@ -25,7 +25,7 @@ class TTSService:
         # configure the command with values from a config file
         piper_command = rf"| .{os.sep}piper "
         voice = "-m " + config.VOICE_NAME
-        output_path = " -d " + str(
+        output_path = " -f " + str(
             Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode()).resolve()
         )
 
@@ -45,7 +45,7 @@ class TTSService:
             log.info(f"TTS starting with input: {text}")
             input_text = f'echo "{text}" '
             file_name = datetime.now().strftime("%Y_%m_%d_%H:%M:%S") + ".wav"
-            command = f"{input_text} {self.__prepared_command} -f {file_name}"
+            command = f"{input_text} {self.__prepared_command}/{file_name}"
             log.debug(f"Executing command: {command}")
 
             res = await self.__run_command_in_subprocess(command)

@@ -14,7 +14,7 @@ def disable_logging():
 
 
 @pytest.mark.asyncio
-async def test_run_command_in_subprocess_logs_stdout_and_stderr(mocker, monkeypatch):
+async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
     # Mock the piper directory
     monkeypatch.setattr(speech_recognition.config, "PIPER_DIR", "/mock/piper")
     # Mock the creation of a subprocess shell
@@ -26,7 +26,9 @@ async def test_run_command_in_subprocess_logs_stdout_and_stderr(mocker, monkeypa
     )
 
     # Create an instance with a dummy queue
-    service = speech_recognition.services.tts_service.TTSService(asyncio.Queue())
+    service = speech_recognition.services.tts_service.TTSService(
+        asyncio.Queue(), mocker.AsyncMock()
+    )
 
     # Run it
     await service._TTSService__run_command_in_subprocess("echo hi")
@@ -54,7 +56,9 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     await queue.put("hello world")
 
     # Create the service instance
-    service = speech_recognition.services.tts_service.TTSService(queue)
+    service = speech_recognition.services.tts_service.TTSService(
+        queue, mocker.AsyncMock()
+    )
 
     # Replace real _run_command_in_subprocess so we can look at the args it was called with
     mock_run = mocker.AsyncMock()
@@ -75,4 +79,4 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     assert "hello world" in called_command
     assert ".\\piper" in called_command or "./piper" in called_command
     assert "-m mock_voice" in called_command
-    assert "-d" in called_command
+    assert "-f /mock/output/" in called_command
