@@ -6,6 +6,7 @@ participant Main
 participant Manager
 participant WebSocketClient
 participant ASRService
+participant AudioHelper
 participant LLMService
 participant TTSService
 participant FileObserver
@@ -23,6 +24,13 @@ WebSocketClient -> Manager : WebSocketClient
 create ASRService
 Manager -> ASRService : ASRService()
 activate ASRService
+create AudioHelper
+ASRService -> AudioHelper : AudioHelper()
+activate AudioHelper
+AudioHelper -> AudioHelper : __get_ffmpeg_decoding_formats()
+activate AudioHelper
+return supported_formats
+return AudioHelper
 ASRService -> ASRService : __load_model()
 activate ASRService
 return Model
