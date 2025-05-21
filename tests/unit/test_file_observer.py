@@ -26,7 +26,7 @@ def disable_logging():
 async def test_on_created_real_queue(tmp_path, test_input, expected):
     loop = asyncio.get_event_loop()
     queue = asyncio.Queue()
-    file_observer = FileObserver(loop, queue)
+    file_observer = FileObserver(loop, queue, str(tmp_path))
 
     # Create fake events for every corresponding filename and RequestType
     event = FileCreatedEvent(src_path=str(tmp_path / test_input))
@@ -44,11 +44,11 @@ async def test_on_created_real_queue(tmp_path, test_input, expected):
 async def test_add_to_queue(tmp_path):
     queue = asyncio.Queue()
     loop = asyncio.get_event_loop()
-    file_observer = FileObserver(loop, queue)
+    file_observer = FileObserver(loop, queue, str(tmp_path))
 
     test_item = {"test": "value"}
 
-    await file_observer._add_to_queue(test_item)
+    await file_observer._FileObserver__add_to_queue(test_item)
 
     assert not queue.empty()
     item = await queue.get()
@@ -58,7 +58,7 @@ async def test_add_to_queue(tmp_path):
 def test_start_observer(mocker, tmp_path):
     loop = asyncio.get_event_loop()
     queue = asyncio.Queue()
-    file_observer = FileObserver(loop, queue)
+    file_observer = FileObserver(loop, queue, str(tmp_path))
 
     # Patch Observer
     mock_observer = mocker.patch(
@@ -69,27 +69,27 @@ def test_start_observer(mocker, tmp_path):
     mock_observer.join.return_value = None
 
     # Start the observer
-    file_observer.start_observer(str(tmp_path))
+    file_observer.start()
 
     # Assert that things happened
     mock_observer.schedule.assert_called_once_with(
-        file_observer, str(tmp_path), recursive=False
+        event_handler=file_observer, path=str(tmp_path), recursive=False
     )
     mock_observer.start.assert_called_once()
     mock_observer.join.assert_called_once()
 
 
-def test_stop_observer(mocker):
+def test_stop_observer(mocker, tmp_path):
     loop = asyncio.get_event_loop()
     queue = asyncio.Queue()
-    file_observer = FileObserver(loop, queue)
+    file_observer = FileObserver(loop, queue, str(tmp_path))
 
     # Create a mock observer
     mock_observer = mocker.Mock()
-    file_observer.observer = mock_observer
+    file_observer._FileObserver__observer = mock_observer
 
     # Stop the observer
-    file_observer.stop_observer()
+    file_observer.stop()
 
     # Assert that it was actually stopped
     mock_observer.stop.assert_called_once()

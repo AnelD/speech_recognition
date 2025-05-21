@@ -1,6 +1,5 @@
 from speech_recognition.services.asr_service import ASRService
 from speech_recognition.services.file_observer import FileObserver
 from speech_recognition.services.llm_service import LLMService
-from speech_recognition.services.tts_service import text_to_speech
 from speech_recognition.services.websocket_client import WebSocketClient
 from speech_recognition.utils.logger_helper import LoggerHelper

@@ -4,10 +4,9 @@ from asyncio import AbstractEventLoop
 from asyncio import Queue
 from typing import Any
 
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from watchdog.observers import Observer
 
-from speech_recognition import config
 from speech_recognition.services.llm_service import RequestType
 from speech_recognition.utils.logger_helper import LoggerHelper
 
@@ -23,30 +22,44 @@ class FileObserver(FileSystemEventHandler):
     and adds the created file names to a processing queue asynchronously.
 
     Attributes:
-        loop (AbstractEventLoop): The event loop used for scheduling tasks.
-        queue (Queue): The queue to which filenames are added for processing.
+        __loop (AbstractEventLoop): The event loop used for scheduling tasks.
+        __queue (Queue): The queue to which filenames are added for processing.
     """
 
-    def __init__(self, loop: AbstractEventLoop, queue: Queue) -> None:
-        self.loop = loop
-        self.queue = queue
+    def __init__(self, loop: AbstractEventLoop, queue: Queue, path: str) -> None:
+        self.__loop = loop
+        self.__queue = queue
+        self.__path = path
 
         # Used to store the actual observer instance
-        self.observer = None
+        self.__observer = None
 
-        self.log_all_events = config.LOG_ALL_EVENTS
-
-    def on_any_event(self, event) -> None:
+    def start(self) -> None:
         """
-        Logs any file system event.
-
-        Args:
-            event (FileSystemEvent): The event that occurred on the file system.
+        Starts the file system observer to monitor the specified directory.
         """
-        if self.log_all_events:
-            log.debug(event)
+        self.__observer = Observer()
+        log.debug(f"Starting file observer on {self.__path}")
+        self.__observer.schedule(event_handler=self, path=self.__path, recursive=False)
+        self.__observer.start()
+        log.info(f"[Observer] Started watching {self.__path}")
+        self.__observer.join()
 
-    def on_created(self, event) -> None:
+    def stop(self) -> None:
+        """
+        Gracefully stops the file system observer.
+        This method stops the observer and joins the threads to ensure a clean shutdown.
+        """
+        if self.__observer is not None:
+            self.__observer.stop()
+            log.info("[Observer] Stopping observer...")
+            # Wait for the observer thread to finish
+            self.__observer.join()
+            log.info("[Observer] Observer stopped successfully.")
+        else:
+            log.warning("[Observer] No observer is currently running.")
+
+    def on_created(self, event: FileSystemEvent) -> None:
         """
         Handles file creation events.
 
@@ -65,13 +78,13 @@ class FileObserver(FileSystemEventHandler):
 
         try:
             asyncio.run_coroutine_threadsafe(
-                self._add_to_queue({"filename": filename, "req_type": req_type}),
-                self.loop,
+                self.__add_to_queue({"filename": filename, "req_type": req_type}),
+                self.__loop,
             )
         except Exception as e:
             log.warning(f"Exception when adding file to queue: {e}")
 
-    async def _add_to_queue(self, item: Any) -> None:
+    async def __add_to_queue(self, item: Any) -> None:
         """
         Asynchronously adds an item to the processing queue.
 
@@ -79,33 +92,5 @@ class FileObserver(FileSystemEventHandler):
             item (Any): The item to be added to the queue.
         """
         log.debug(f"Adding to queue: {item}")
-        await self.queue.put(item)
+        await self.__queue.put(item)
         log.debug(f"Successfully added: {item}")
-
-    def start_observer(self, path: str) -> None:
-        """
-        Starts the file system observer to monitor the specified directory.
-
-        Args:
-            path (str): The directory path to monitor for file system events.
-        """
-        event_handler = self  # Use the current instance as the event handler
-        self.observer = Observer()
-        self.observer.schedule(event_handler, path, recursive=False)
-        self.observer.start()
-        log.info(f"[Observer] Started watching {path}")
-        self.observer.join()
-
-    def stop_observer(self) -> None:
-        """
-        Gracefully stops the file system observer.
-        This method stops the observer and joins the threads to ensure a clean shutdown.
-        """
-        if self.observer is not None:
-            self.observer.stop()
-            log.info("[Observer] Stopping observer...")
-            # Wait for the observer thread to finish
-            self.observer.join()
-            log.info("[Observer] Observer stopped successfully.")
-        else:
-            log.warning("[Observer] No observer is currently running.")

@@ -14,7 +14,9 @@ def disable_logging():
 
 
 @pytest.mark.asyncio
-async def test_run_command_in_subprocess_logs_stdout_and_stderr(mocker):
+async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
+    # Mock the piper directory
+    monkeypatch.setattr(speech_recognition.config, "PIPER_DIR", "/mock/piper")
     # Mock the creation of a subprocess shell
     mock_proc = mocker.AsyncMock()
     mock_proc.communicate.return_value = (b"Hello stdout", b"Hello stderr")
@@ -23,10 +25,13 @@ async def test_run_command_in_subprocess_logs_stdout_and_stderr(mocker):
         return_value=mock_proc,
     )
 
-    # Run it
-    await speech_recognition.services.tts_service.run_command_in_subprocess(
-        "echo hi", cwd="/tmp"
+    # Create an instance with a dummy queue
+    service = speech_recognition.services.tts_service.TTSService(
+        asyncio.Queue(), mocker.AsyncMock()
     )
+
+    # Run it
+    await service._TTSService__run_command_in_subprocess("echo hi")
 
     # Assert it was called correctly
     mock_proc.communicate.assert_called_once()
@@ -35,7 +40,7 @@ async def test_run_command_in_subprocess_logs_stdout_and_stderr(mocker):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         shell=True,
-        cwd="/tmp",
+        cwd="/mock/piper",
     )
 
 
@@ -46,18 +51,21 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     monkeypatch.setattr(speech_recognition.config, "VOICE_NAME", "mock_voice")
     monkeypatch.setattr(speech_recognition.config, "GENERATE_AUDIO_DIR", "/mock/output")
 
-    # Replace real run_command... so we can look at the args it was called with
-    mock_run = mocker.AsyncMock()
-    monkeypatch.setattr(
-        speech_recognition.services.tts_service, "run_command_in_subprocess", mock_run
-    )
-
-    # Create queue and await for the task to start
+    # Create queue and put a message
     queue = asyncio.Queue()
     await queue.put("hello world")
-    task = asyncio.create_task(
-        speech_recognition.services.tts_service.text_to_speech(queue)
+
+    # Create the service instance
+    service = speech_recognition.services.tts_service.TTSService(
+        queue, mocker.AsyncMock()
     )
+
+    # Replace real _run_command_in_subprocess so we can look at the args it was called with
+    mock_run = mocker.AsyncMock()
+    mocker.patch.object(service, "_TTSService__run_command_in_subprocess", mock_run)
+
+    # Await for the task to start
+    task = asyncio.create_task(service.text_to_speech())
     await asyncio.sleep(0.1)
 
     # We don't need it to actually do anything
@@ -67,10 +75,8 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
 
     # Assert the things
     assert mock_run.call_count == 1
-    called_command = mock_run.call_args[0][0]
-    called_cwd = mock_run.call_args[1]["cwd"]
+    called_command = mock_run.call_args.args[0]
     assert "hello world" in called_command
     assert ".\\piper" in called_command or "./piper" in called_command
     assert "-m mock_voice" in called_command
-    assert "-d" in called_command
-    assert "/mock/piper" in called_cwd
+    assert "-f /mock/output/" in called_command

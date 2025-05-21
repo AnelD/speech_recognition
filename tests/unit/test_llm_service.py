@@ -52,7 +52,7 @@ def test_load_model(mocker):
 def test_generate_json_response(mocker, mock_service):
     # Mock the return of the actual llm generation
     mock_llm = mocker.patch(
-        "speech_recognition.services.llm_service.LLMService._generate_output",
+        "speech_recognition.services.llm_service.LLMService._LLMService__generate_output",
         return_value='```json{"result": "YES"}```',
     )
 
@@ -67,7 +67,7 @@ def test_generate_json_response(mocker, mock_service):
 def test_generate_json_response_bad_request(mocker, mock_service):
     # Mock the output of the llm generation
     mock_llm = mocker.patch(
-        "speech_recognition.services.llm_service.LLMService._generate_output",
+        "speech_recognition.services.llm_service.LLMService._LLMService__generate_output",
         return_value='```json{"result": "YES"}```',
     )
 
@@ -82,7 +82,7 @@ def test_generate_json_response_bad_request(mocker, mock_service):
 def test_generate_json_response_output_raises(mocker, mock_service):
     # Mock the llm generation throwing an exception
     mocker.patch(
-        "speech_recognition.services.llm_service.LLMService._generate_output",
+        "speech_recognition.services.llm_service.LLMService._LLMService__generate_output",
         side_effect=Exception("Something went wrong"),
     )
 

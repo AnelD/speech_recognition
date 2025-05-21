@@ -88,7 +88,11 @@ async def start_mock_server(host="localhost", port=8080, in_queue=None, out_queu
 
 
 def serve_mock(
-    host="localhost", port=8080, in_queue=None, out_queue=None, shutdown_event=None
+    host="localhost",
+    port=8080,
+    in_queue=None,
+    out_queue=None,
+    shutdown_event=asyncio.Event(),
 ):
     async def run_server():
         server = await start_mock_server(host, port, in_queue, out_queue)

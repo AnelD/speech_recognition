@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
+import main
 import speech_recognition
-from speech_recognition import main
 from tests.mock_server import start_server_thread
 
 
@@ -46,7 +46,7 @@ async def test_tts_it(monkeypatch):
     await asyncio.sleep(1)
 
     # Start the application
-    asyncio.create_task(main.main())
+    app_task = asyncio.create_task(main.main())
 
     # Send a message from the mockserver
     await asyncio.sleep(1)
@@ -67,11 +67,11 @@ async def test_tts_it(monkeypatch):
         os.remove(file)
 
     # Shutdown the app and server
-    # Cancel all tasks before event loop closes
-    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    for task in tasks:
-        task.cancel()
-    await asyncio.gather(*tasks, return_exceptions=True)
+    try:
+        app_task.cancel()
+    except asyncio.CancelledError:
+        await app_task
+
     # Set shutdown event for server
     shutdown_event.set()
     server_thread.join(timeout=5)

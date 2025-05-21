@@ -1,7 +1,8 @@
 import logging
 import os
-import time
 from logging.handlers import TimedRotatingFileHandler
+
+import colorlog
 
 from speech_recognition import config
 
@@ -29,14 +30,20 @@ class LoggerHelper:
         self.log_file = config.LOG_FILE
 
         if not self.logger.handlers:
-            formatter = logging.Formatter(
-                fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+            console_formatter = colorlog.ColoredFormatter(
+                "%(log_color)s%(asctime)s - %(levelname)s - %(name)s - %(message)s",
                 datefmt="%H:%M:%S",
+                log_colors={
+                    "DEBUG": "cyan",
+                    "INFO": "green",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
+                    "CRITICAL": "bold_red",
+                },
             )
-
             # Console handler
             console_handler = logging.StreamHandler()
-            console_handler.setFormatter(formatter)
+            console_handler.setFormatter(console_formatter)
             self.logger.addHandler(console_handler)
 
             # File handler with daily rotation
@@ -49,27 +56,13 @@ class LoggerHelper:
                 encoding="utf-8",
                 utc=False,
             )
-            file_handler.setFormatter(formatter)
-            file_handler.namer = _custom_namer
+            file_formatter = logging.Formatter(
+                fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+                datefmt="%H:%M:%S",
+            )
+            file_handler.setFormatter(file_formatter)
             self.logger.addHandler(file_handler)
 
     def get_logger(self) -> logging.Logger:
         """Returns the configured logger."""
         return self.logger
-
-
-def _custom_namer(default_name: str) -> str:
-    """
-    Custom namer function for TimedRotatingFileHandler.
-    Renames rotated log files to use the format: app_log_YYYY-MM-DD.log
-
-    Parameters:
-        default_name (str): The default filename provided by the handler.
-
-    Returns:
-        str: A modified filename including a timestamp in the desired format.
-    """
-    base, ext = os.path.splitext(default_name)
-    base = base.replace(".log", "_log")
-    timestamp = time.strftime("%Y-%m-%d")
-    return f"{base}_{timestamp}{ext}"
