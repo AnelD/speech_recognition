@@ -14,9 +14,9 @@ async def main():
     log.info("Initializing...")
     manager = await Manager().start()
     log.info("Initialization complete.")
-    art.tprint("speech", "slant")
-    art.tprint("recognition", "slant")
-    art.tprint("started", "slant")
+    art.tprint("speech", "sub-zero")
+    art.tprint("recognition", "sub-zero")
+    art.tprint("started", "sub-zero")
     try:
         while True:
             await manager.ready_for_next_job()
@@ -28,9 +28,9 @@ async def main():
         log.info("Cancellation requested.")
         await manager.stop()
         log.info("Cancellation complete.")
-        art.tprint("speech", "slant")
-        art.tprint("recognition", "slant")
-        art.tprint("started", "slant")
+        art.tprint("speech", "sub-zero")
+        art.tprint("recognition", "sub-zero")
+        art.tprint("stopped", "sub-zero")
 
 
 if __name__ == "__main__":
