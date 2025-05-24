@@ -117,14 +117,14 @@ COMMAND_DATA
 }
 
 FileSystemEventHandler <|-- FileObserver
-Manager *--> FileObserver
-Manager *--> WebSocketClient
-Manager *--> ASRService
-Manager *--> LLMService
-ASRService *--> AudioHelper
+Manager --> FileObserver
+Manager --> WebSocketClient
+Manager --> ASRService
+Manager --> LLMService
+ASRService --> AudioHelper
 LLMService --> RequestType
-FileObserver *--> RequestType
-Manager *--> TTSService
+FileObserver --> RequestType
+Manager --> TTSService
 
 
 @enduml
