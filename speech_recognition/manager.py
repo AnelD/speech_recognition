@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import threading
 from pathlib import Path
 from threading import Thread
@@ -57,8 +58,7 @@ class Manager:
         self.__observer_thread.start()
 
         # register at server as speech recognition service
-        await self.__client.connect()
-        await self.__client.send_message("sp")
+        await self.__client.connect("sp")
 
         # Create Tasks
         self.__tasks.append(asyncio.create_task(self.__tts.text_to_speech()))
@@ -142,8 +142,8 @@ class Manager:
                 )
             )
             text = self.__asr.transcribe(
-                f"{str(self.__IN_DIR)}/{filename}",
-                f"{str(self.__OUT_DIR)}/{filename.rsplit('.', 1)[0]}.wav",
+                f"{str(self.__IN_DIR)}{os.sep}{filename}",
+                f"{str(self.__OUT_DIR)}{os.sep}{filename.rsplit('.', 1)[0]}.wav",
             )
             await self.__llm_queue.put({"prompt": text, "req_type": req_type})
         except Exception as e:
