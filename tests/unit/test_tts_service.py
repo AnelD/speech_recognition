@@ -65,7 +65,7 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     mocker.patch.object(service, "_TTSService__run_command_in_subprocess", mock_run)
 
     # Await for the task to start
-    task = asyncio.create_task(service.text_to_speech())
+    task = asyncio.create_task(service.generate_audio())
     await asyncio.sleep(0.1)
 
     # We don't need it to actually do anything

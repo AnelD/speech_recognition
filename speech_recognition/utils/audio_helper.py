@@ -1,10 +1,12 @@
 import os
 import subprocess
+from pathlib import Path
 from typing import Set
 
 import pydub
 from pydub.silence import detect_nonsilent
 
+from speech_recognition import config
 from speech_recognition.exceptions.transcription_error import TranscriptionError
 from speech_recognition.utils.logger_helper import LoggerHelper
 
@@ -13,6 +15,9 @@ log = LoggerHelper(__name__).get_logger()
 
 class AudioHelper:
     def __init__(self):
+        self.__out_dir = Path(
+            config.AUDIO_OUT_DIR.encode("unicode_escape").decode()
+        ).resolve()
         self.__supported_formats = self.__get_ffmpeg_decoding_formats()
 
     def is_file_empty(self, infile: str) -> bool:
@@ -29,25 +34,29 @@ class AudioHelper:
             return True
         return self.__is_audio_empty(infile)
 
-    def convert_audio_to_wav(self, infile: str, outfile: str) -> None:
+    def convert_audio_to_wav(self, infile: str) -> str:
         """Convert an input audio file to WAV format.
 
         Args:
             infile (str): Path to the input audio file.
-            outfile (str): Path to save the output WAV file.
 
         Returns:
-            None
+            str : Path to the output WAV file.
         """
         if not self.__is_file_format_supported(infile):
             log.exception(f"File format of {infile} is not supported.")
             raise TranscriptionError(f"File format of {infile} is not supported.")
+
+        outfile = (
+            f"{self.__out_dir}{os.sep}{infile.split(os.sep)[-1].split('.')[0]}.wav"
+        )
 
         log.info(f"Converting {infile} to WAV format as {outfile}")
 
         try:
             sound = pydub.AudioSegment.from_file(infile)
             sound.export(outfile, format="wav")
+            return outfile
         except Exception as e:
             log.exception(f"Error during conversion of {infile} to WAV format: {e}")
             raise TranscriptionError(
@@ -67,14 +76,14 @@ class AudioHelper:
 
     @staticmethod
     def __is_audio_empty(
-        infile: str, min_silence_len: int = 100, silence_thresh: int = -50
+        infile: str, min_silence_len: int = 1000, silence_thresh: int = -50
     ) -> bool:
         """Check if an audio file is empty or contains only silence.
 
         Args:
             infile (str): Path to the input audio file.
             min_silence_len (int, optional): Minimum length of silence in milliseconds to consider. Defaults to 100.
-            silence_thresh (int, optional): Silence threshold in dBFS. Defaults to -50.
+            silence_thresh (int, optional): Silence threshold in dBFS. Default to -50.
 
         Returns:
             bool: True if the audio is silent, False otherwise.
@@ -140,14 +149,3 @@ class AudioHelper:
 
         log.info("Supported formats will now be cached")
         return decoding_formats
-
-
-if __name__ == "__main__":
-    audio_helper = AudioHelper()
-    print(audio_helper.__supported_formats)
-    print(audio_helper.__get_ffmpeg_decoding_formats())
-    print(audio_helper.__get_ffmpeg_decoding_formats())
-    print(audio_helper.__is_file_format_supported("test.mp3"))
-    print(audio_helper.__is_file_format_supported("test.m4a"))
-    print(audio_helper.__is_file_format_supported("test.m4b"))
-    audio_helper.convert_audio_to_wav("test.m4b", "test.wav")

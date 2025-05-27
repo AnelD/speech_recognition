@@ -91,6 +91,8 @@ class LLMService:
         log.debug(f"LLM raw output: {output}")
 
         output = output.replace("```json", "").replace("```", "").strip()
+        # TODO fixen?
+        # return json.loads(output)
         return output
 
     def __generate_output(self, messages) -> str:

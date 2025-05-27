@@ -71,7 +71,7 @@ class WebSocketClient:
             await self.__ws.close()
             self.__ws = None
 
-    async def send_message(self, message: str) -> None:
+    async def send_message(self, message: str | dict) -> None:
         """Send the provided message to the websocket server.
 
             Calls the message_preprocessor on the message before sending it.
@@ -81,7 +81,11 @@ class WebSocketClient:
         if self.__ws:
             try:
                 log.info(f"Sending message: {message}")
-                await self.__ws.send(message)
+                match message:
+                    case dict():
+                        await self.__ws.send(json.dumps(message))
+                    case str():
+                        await self.__ws.send(message)
             except Exception as e:
                 log.error(f"Error sending message: {e}")
         else:

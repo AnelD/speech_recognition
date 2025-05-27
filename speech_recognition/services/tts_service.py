@@ -1,11 +1,11 @@
 import asyncio
-import json
 import os
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from speech_recognition import config, WebSocketClient
+from speech_recognition.exceptions.audio_generation_error import AudioGenerationError
 from speech_recognition.utils.logger_helper import LoggerHelper
 
 log = LoggerHelper(__name__).get_logger()
@@ -31,46 +31,27 @@ class TTSService:
 
         self.__prepared_command = piper_command + voice + output_path
 
-    async def text_to_speech(self) -> None:
+    async def generate_audio(self, text) -> str:
         """
         Turn a text message into an audio file.
 
         Returns:
-             None
+             str : Path to the generated audio file.
         """
 
         # run forever waiting for inputs
-        while True:
-            text = await self.__queue.get()
-            log.info(f"TTS starting with input: {text}")
-            input_text = f'echo "{text}" '
-            file_name = datetime.now().strftime("%Y_%m_%d_%H:%M:%S") + ".wav"
-            command = f"{input_text} {self.__prepared_command}/{file_name}"
-            log.debug(f"Executing command: {command}")
+        log.info(f"TTS starting with input: {text}")
+        input_text = f'echo "{text}" '
+        filename = datetime.now().strftime("%Y_%m_%d_%H:%M:%S") + ".wav"
+        command = f"{input_text} {self.__prepared_command}{os.sep}{filename}"
+        log.debug(f"Executing command: {command}")
 
-            res = await self.__run_command_in_subprocess(command)
-            if file_name in res:
-                await self.__client.send_message(
-                    json.dumps(
-                        {
-                            "type": "GENERATE_AUDIO_SUCCESS",
-                            "message": {
-                                "text": f"Successfully generated audio file: {file_name}",
-                            },
-                        }
-                    )
-                )
-            else:
-                await self.__client.send_message(
-                    json.dumps(
-                        {
-                            "type": "GENERATE_AUDIO_ERROR",
-                            "message": {
-                                "text": f"Error while generating audio file: {res}"
-                            },
-                        }
-                    )
-                )
+        res = await self.__run_command_in_subprocess(command)
+        if filename in res:
+            return res
+        else:
+            log.error(f"Audio generation failed, received unexpected response: {res}")
+            raise AudioGenerationError("Could not generate audio from text.")
 
     async def __run_command_in_subprocess(self, command: str) -> Optional[str]:
         """

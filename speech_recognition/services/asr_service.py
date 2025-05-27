@@ -23,12 +23,11 @@ class ASRService:
         self.__audio_helper = AudioHelper()
         self.__transcriber = self.__load_model()
 
-    def transcribe(self, infile: str, outfile: str) -> str:
+    def transcribe(self, file: str) -> str:
         """Transcribe an audio file to text.
 
         Args:
-            infile (str): Path to the input audio file.
-            outfile (str): Path to save the intermediate WAV file.
+            file (str): Path to the input audio file.
 
         Returns:
             str: Transcribed text.
@@ -36,10 +35,10 @@ class ASRService:
         Raises:
             TranscriptionError: If the file is empty or an error occurs during transcription.
         """
-        if self.__audio_helper.is_file_empty(infile):
-            raise TranscriptionError(f"file {infile} is empty or contains only silence")
+        if self.__audio_helper.is_file_empty(file):
+            raise TranscriptionError(f"file {file} is empty or contains only silence")
 
-        self.__audio_helper.convert_audio_to_wav(infile, outfile)
+        outfile = self.__audio_helper.convert_audio_to_wav(file)
         log.info(f"Transcribing {outfile}...")
         t0 = time.time()
 

@@ -78,7 +78,7 @@ class FileObserver(FileSystemEventHandler):
 
         try:
             asyncio.run_coroutine_threadsafe(
-                self.__add_to_queue({"filename": filename, "req_type": req_type}),
+                self.__add_to_queue({"file": event.src_path, "req_type": req_type}),
                 self.__loop,
             )
         except Exception as e:
