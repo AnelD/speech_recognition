@@ -28,7 +28,7 @@ class WebSocketClient:
         self.__queue = queue
         self.__ws = None
 
-    async def connect(self, message: Optional[str]) -> None:
+    async def connect(self, message: Optional[str] = None) -> None:
         """Connect to the websocket server at given URI."""
         log.info(f"Connecting to websocket server at {self.__uri}")
         self.__register_message = message

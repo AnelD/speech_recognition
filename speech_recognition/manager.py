@@ -1,10 +1,11 @@
 import asyncio
 import threading
+from asyncio import AbstractEventLoop
 from threading import Thread
-from typing import Self
 
 from speech_recognition import (
     LoggerHelper,
+    FileObserver,
 )
 from speech_recognition.workers.abstract_worker import AbstractWorker
 
@@ -17,14 +18,17 @@ class Manager:
     __tasks = []
 
     def __init__(
-        self, event_loop, workers: list[AbstractWorker], file_observer
+        self,
+        loop: AbstractEventLoop,
+        workers: list[AbstractWorker],
+        file_observer: FileObserver,
     ) -> None:
-        self.__loop = event_loop
+        self.__loop = loop
         self.__workers = workers
         self.__file_observer = file_observer
         self.__observer_thread = self.__start_file_observer()
 
-    async def start(self) -> Self:
+    async def start(self) -> None:
         log.info("Manager starting")
         # Start the observer thread
         self.__observer_thread.start()

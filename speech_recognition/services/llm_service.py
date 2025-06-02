@@ -94,7 +94,7 @@ class LLMService:
         output = output.replace("```json", "").replace("```", "").strip()
         return json.loads(output)
 
-    def __generate_output(self, messages) -> str:
+    def __generate_output(self, messages: list[dict[str, str]]) -> str:
         input_text = self.__tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
