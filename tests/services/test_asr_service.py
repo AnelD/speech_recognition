@@ -39,7 +39,7 @@ def test_asrservice_load_model(mocker):
     assert service is not None
 
 
-def test_asrservice_transcribe_success(mocker, dummy_audio_path, dummy_wav_path):
+def test_asrservice_transcribe_success(mocker, dummy_audio_path):
     # Mock the things as we don't want to run a real model
     mock_model = mocker.Mock(return_value={"text": "Hello world"})
     mocker.patch(
@@ -54,15 +54,13 @@ def test_asrservice_transcribe_success(mocker, dummy_audio_path, dummy_wav_path)
     mock_audio_helper.is_file_empty.return_value = False
 
     service = ASRService()
-    text = service.transcribe(str(dummy_audio_path), str(dummy_wav_path))
+    text = service.transcribe(str(dummy_audio_path))
 
     assert text == "Hello world"
     mock_audio_helper.convert_audio_to_wav.assert_called_once()
 
 
-def test_asrservice_transcribe_empty_file_raises(
-    mocker, dummy_audio_path, dummy_wav_path
-):
+def test_asrservice_transcribe_empty_file_raises(mocker, dummy_audio_path):
     # Mock the AudioHelper
     mock_audio_helper = mocker.patch(
         "speech_recognition.services.asr_service.AudioHelper"
@@ -76,7 +74,7 @@ def test_asrservice_transcribe_empty_file_raises(
     service = ASRService()
 
     with pytest.raises(TranscriptionError, match="empty or contains only silence"):
-        service.transcribe(str(dummy_audio_path), str(dummy_wav_path))
+        service.transcribe(str(dummy_audio_path))
 
 
 def test_asrservice_transcribe_exception_during_inference(
@@ -98,4 +96,4 @@ def test_asrservice_transcribe_exception_during_inference(
     service = ASRService()
 
     with pytest.raises(TranscriptionError, match="Error while transcribing"):
-        service.transcribe(str(dummy_audio_path), str(dummy_wav_path))
+        service.transcribe(str(dummy_audio_path))

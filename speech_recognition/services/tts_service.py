@@ -13,8 +13,7 @@ log = LoggerHelper(__name__).get_logger()
 
 class TTSService:
 
-    def __init__(self, queue: asyncio.Queue, client: WebSocketClient) -> None:
-        self.__queue = queue
+    def __init__(self, client: WebSocketClient) -> None:
         self.__client = client
 
         # get piper directory

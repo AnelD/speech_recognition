@@ -15,9 +15,7 @@ log = LoggerHelper(__name__).get_logger()
 
 class AudioHelper:
     def __init__(self):
-        self.__out_dir = Path(
-            config.AUDIO_OUT_DIR.encode("unicode_escape").decode()
-        ).resolve()
+        self.__out_dir = Path(config.AUDIO_OUT_DIR).resolve()
         self.__supported_formats = self.__get_ffmpeg_decoding_formats()
 
     def is_file_empty(self, infile: str) -> bool:

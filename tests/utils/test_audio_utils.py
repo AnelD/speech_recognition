@@ -2,6 +2,7 @@ import logging
 
 import pytest
 
+import speech_recognition
 from speech_recognition.exceptions.transcription_error import TranscriptionError
 from speech_recognition.utils.audio_helper import AudioHelper
 
@@ -10,11 +11,6 @@ from speech_recognition.utils.audio_helper import AudioHelper
 @pytest.fixture
 def dummy_audio_path(tmp_path):
     return tmp_path / "dummy_audio.mp3"
-
-
-@pytest.fixture
-def dummy_wav_path(tmp_path):
-    return tmp_path / "dummy_audio.wav"
 
 
 @pytest.fixture
@@ -88,19 +84,22 @@ def test_is_file_empty_large_file_non_silent(mocker, dummy_audio_path):
 
 
 # --- convert_audio_to_wav tests ---
-def test_convert_audio_to_wav_success(mocker, dummy_audio_path, dummy_wav_path):
+def test_convert_audio_to_wav_success(mocker, monkeypatch, dummy_audio_path, tmp_path):
     mock_audio = mocker.Mock()
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", tmp_path)
     mocker.patch(
         "speech_recognition.utils.audio_helper.pydub.AudioSegment.from_file",
         return_value=mock_audio,
     )
 
     helper = AudioHelper()
-    helper.convert_audio_to_wav(str(dummy_audio_path), str(dummy_wav_path))
-    mock_audio.export.assert_called_once_with(str(dummy_wav_path), format="wav")
+    helper.convert_audio_to_wav(str(dummy_audio_path))
+    mock_audio.export.assert_called_once_with(
+        str(tmp_path / "dummy_audio.wav"), format="wav"
+    )
 
 
-def test_convert_audio_to_wav_failure(mocker, dummy_audio_path, dummy_wav_path):
+def test_convert_audio_to_wav_failure(mocker, dummy_audio_path):
     mocker.patch(
         "speech_recognition.utils.audio_helper.pydub.AudioSegment.from_file",
         side_effect=Exception("Something went wrong"),
@@ -108,12 +107,12 @@ def test_convert_audio_to_wav_failure(mocker, dummy_audio_path, dummy_wav_path):
 
     helper = AudioHelper()
     with pytest.raises(TranscriptionError):
-        helper.convert_audio_to_wav(str(dummy_audio_path), str(dummy_wav_path))
+        helper.convert_audio_to_wav(str(dummy_audio_path))
 
 
-def test_filetype_not_supported(tmp_path, dummy_wav_path):
+def test_filetype_not_supported(tmp_path):
     path = tmp_path / "file.mb3"
 
     helper = AudioHelper()
     with pytest.raises(TranscriptionError):
-        helper.convert_audio_to_wav(str(path), str(dummy_wav_path))
+        helper.convert_audio_to_wav(str(path))

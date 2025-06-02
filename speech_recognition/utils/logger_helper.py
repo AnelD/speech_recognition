@@ -46,6 +46,10 @@ class LoggerHelper:
             console_handler.setFormatter(console_formatter)
             self.logger.addHandler(console_handler)
 
+            # Omit the file handler when running tests
+            if os.getenv("TEST"):
+                return
+
             # File handler with daily rotation
             os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
             file_handler = TimedRotatingFileHandler(

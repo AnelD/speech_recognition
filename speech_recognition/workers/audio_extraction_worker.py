@@ -47,7 +47,10 @@ class AudioExtractionWorker(AbstractWorker):
                     self.llm_service.generate_json_response, text, request["req_type"]
                 )
                 await self.client.send_message(
-                    {"type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS", "message": result}
+                    {
+                        "type": "EXTRACT_DATA_FROM_AUDIO_SUCCESS",
+                        "message": {"text": result},
+                    }
                 )
 
             except (LLMProcessingError, TranscriptionError) as e:

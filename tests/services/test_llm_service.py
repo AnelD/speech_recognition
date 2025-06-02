@@ -60,7 +60,7 @@ def test_generate_json_response(mocker, mock_service):
     output = mock_service.generate_json_response("yes", req_type=RequestType.COMMAND)
 
     # Assert that it did the right things
-    assert output == '{"result": "YES"}'
+    assert output == {"result": "YES"}
     mock_llm.assert_called_once()
 
 

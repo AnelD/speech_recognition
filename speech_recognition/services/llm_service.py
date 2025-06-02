@@ -1,3 +1,4 @@
+import json
 import time
 from enum import Enum
 
@@ -91,9 +92,7 @@ class LLMService:
         log.debug(f"LLM raw output: {output}")
 
         output = output.replace("```json", "").replace("```", "").strip()
-        # TODO fixen?
-        # return json.loads(output)
-        return output
+        return json.loads(output)
 
     def __generate_output(self, messages) -> str:
         input_text = self.__tokenizer.apply_chat_template(

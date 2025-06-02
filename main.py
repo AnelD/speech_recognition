@@ -35,7 +35,7 @@ async def main():
     client = WebSocketClient(config.WEBSOCKET_URI, text_queue)
     asr = ASRService()
     llm = LLMService()
-    tts = TTSService(text_queue, client)
+    tts = TTSService(client)
     file_observer = FileObserver(event_loop, speech_queue, in_dir)
 
     # Create Workers
