@@ -1,0 +1,130 @@
+@startuml
+class Manager{
+-String __IN_DIR
+-String __OUT_DIR
+-Task __tasks[]
+-AbstractEventLoop __loop
+-Queue __text_queue
+-Queue __speech_queue
+-Queue __llm_queue
+-Event __speech_event
+-Event __llm_event
+-WebSocketClient __client
+-ASRService __asr
+-LLMService __llm
+-TTSService __tts
+-FileObserver __file_observer
+
++Manager Manager()
++void start()
++void stop()
++void ready_for_next_job()
+
+-void __handle_audio()
+-void __transcribe_audio(dict)
+-void __extract_data_from_transcript(dict)
+-[FileObserver, Thread] __start_file_observer()
+}
+
+
+class TTSService{
+
+-Queue __queue
+-String __piper_dir
+-String __prepared_command
+
++TTSService TTSService(Queue)
++void text_to_speech()
+
+-void __run_command_in_subprocess(String)()
+}
+
+class WebSocketClient{
+-String __uri
+-Queue __queue
+-ClientConnection __ws
+
++WebSocketClient WebSocketClient(String, Queue)
++void connect()
++void close_connection(String)
++void send_message(String)
+
+-void __receive_messages()
+-void __message_handler(String)
+}
+
+class ASRService{
+-AudioHelper __audio_helper
+-String __device
+-String __language
+-String __model_name
+-Pipeline __transcriber
+
++ASRService ASRService()
++String transcribe(String, String)
+
+-Pipeline __load_model()
+}
+
+class LLMService{
+-{static}String __COMMAND_PROMPT
+-{static}String __PERSON_DATA_PROMPT
+-String __device
+-String __model_name
+-PreTrainedModel __model
+-PreTrainedTokenizerFast __tokenizer
+
++LLMService LLMService()
++String generate_json_response(String, RequestType)
+
+-String __generate_output(list[dict[String, String]])
+-[PreTrainedModel, PreTrainedTokenizerFast] __load_model()
+}
+
+
+class FileObserver{
+-AbstractEventLoop __loop
+-Queue __queue
+-BaseObserver __observer
+
++FileObserver FileObserver(AbstractEventLoop, Queue, String)
++void start()
++void stop()
++void on_created(FileSystemEvent)
+
+-void __add_to_queue(Any)
+}
+
+class AudioHelper{
+-set[String] __supported_decoding_formats
+
++bool is_file_empty(String)
++void convert_audio_to_wav(String, String)
+
+-bool __is_file_format_supported(String)
+-{static}bool __is_audio_empty(String, int, int)
+-{static}set[String] __get_ffmpeg_decoding_formats()
+}
+
+abstract class FileSystemEventHandler{
++void on_created(FileSystemEvent)
+}
+
+enum RequestType{
+BAD_REQUEST
+PERSON_DATA
+COMMAND_DATA
+}
+
+FileSystemEventHandler <|-- FileObserver
+Manager --> FileObserver
+Manager --> WebSocketClient
+Manager --> ASRService
+Manager --> LLMService
+ASRService --> AudioHelper
+LLMService --> RequestType
+FileObserver --> RequestType
+Manager --> TTSService
+
+
+@enduml
