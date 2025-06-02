@@ -21,8 +21,8 @@ log = LoggerHelper(__name__).get_logger()
 
 async def main():
     log.info("Initializing...")
-    # Get configured filepaths, encode, and decode to handle windows paths with \
-    in_dir = str(Path(config.AUDIO_IN_DIR.encode("unicode_escape").decode()).resolve())
+    # Get configured filepaths
+    in_dir = str(Path(config.AUDIO_IN_DIR).resolve())
 
     # Create Queues
     speech_queue = asyncio.Queue()
@@ -62,7 +62,3 @@ async def main():
         art.tprint("speech", "sub-zero")
         art.tprint("recognition", "sub-zero")
         art.tprint("stopped", "sub-zero")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

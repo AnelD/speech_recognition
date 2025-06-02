@@ -17,16 +17,12 @@ class TTSService:
         self.__client = client
 
         # get piper directory
-        self.__piper_dir = str(
-            Path(config.PIPER_DIR.encode("unicode_escape").decode()).resolve()
-        )
+        self.__piper_dir = str(Path(config.PIPER_DIR).resolve())
 
         # configure the command with values from a config file
         piper_command = rf"| .{os.sep}piper "
         voice = "-m " + config.VOICE_NAME
-        output_path = " -f " + str(
-            Path(config.GENERATE_AUDIO_DIR.encode("unicode_escape").decode()).resolve()
-        )
+        output_path = " -f " + str(Path(config.GENERATE_AUDIO_DIR).resolve())
 
         self.__prepared_command = piper_command + voice + output_path
 

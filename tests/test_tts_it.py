@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-import main
 import speech_recognition
+from speech_recognition import main
 from tests.mock_server import start_server_thread
 
 
