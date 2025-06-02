@@ -124,6 +124,33 @@ class AudioHelper{
 -{static}set[str] __get_ffmpeg_decoding_formats()
 }
 
+enum RequestType{
+BAD_REQUEST
+PERSON_DATA
+COMMAND_DATA
+}
+
+
+exception AudioGenerationError{
++str message
+
++AudioGenerationError AudioGenerationWorker(str)
+}
+
+exception LLMProcessingError{
++str message
+
++LLMProcessingError LLMProcessingError(str)
+}
+
+exception TranscriptionError{
++str message
+
++TranscriptionError TranscriptionError(str)
+}
+
+exception Exception{
+}
 
 Manager o--> AbstractWorker
 Manager --> FileObserver
@@ -134,7 +161,19 @@ AudioExtractionWorker --> LLMService
 AudioExtractionWorker --> WebSocketClient
 AudioGenerationWorker --> TTSService
 AudioGenerationWorker --> WebSocketClient
-FileSystemEventHandler <|--- FileObserver
+FileSystemEventHandler <|-- FileObserver
 ASRService --> AudioHelper
+LLMService --> RequestType
+FileObserver --> RequestType
+
+AudioGenerationError ..|> Exception
+LLMProcessingError ..|> Exception
+TranscriptionError ..|> Exception
+
+TTSService --> AudioGenerationError
+LLMService --> LLMProcessingError
+ASRService --> TranscriptionError
+AudioHelper --> TranscriptionError
+
 
 @enduml
