@@ -7,18 +7,18 @@ WEBSOCKET_URI = "ws://localhost:8080"
 
 # Audio directories
 # Make sure that in and out don't point to the same folder
-AUDIO_IN_DIR = "/home/anel/PycharmProjects/speech_recognition/data/in"
-AUDIO_OUT_DIR = "/home/anel/PycharmProjects/speech_recognition/data/out"
+AUDIO_IN_DIR = r"/home/anel/PycharmProjects/speech_recognition/data/in"
+AUDIO_OUT_DIR = r"/home/anel/PycharmProjects/speech_recognition/data/out"
 
 
 # TTS (Text-to-Speech) settings
-PIPER_DIR = "/home/anel/Desktop/piper"
+PIPER_DIR = r"/home/anel/Desktop/piper"
 # Voice model name for Piper
 # If it's not inside the PIPER_DIR, provide the full absolute path
 VOICE_NAME = "de_DE-thorsten-high.onnx"
 # VOICE_NAME = "Thorsten-Voice_Hessisch_Piper_high-Oct2023.onnx"
 # Directory where generated audio files are stored
-GENERATE_AUDIO_DIR = "/home/anel/PycharmProjects/speech_recognition/data/generated"
+GENERATE_AUDIO_DIR = r"/home/anel/PycharmProjects/speech_recognition/data/generated"
 
 # ASR (Automatic Speech Recognition) settings
 # Default: openai/whisper-large-v3-turbo
@@ -33,4 +33,4 @@ LLM_MODEL_NAME = "Qwen/Qwen2.5-0.5B-Instruct"
 LOG_LEVEL = logging.DEBUG
 
 # Log file name and location
-LOG_FILE = "logs/app.log"
+LOG_FILE = r"logs/app.log"

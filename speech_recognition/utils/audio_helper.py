@@ -14,18 +14,29 @@ log = LoggerHelper(__name__).get_logger()
 
 
 class AudioHelper:
+    """Utility class for handling audio preprocessing tasks such as format validation,
+    conversion to WAV, and silence detection.
+
+    Attributes:
+        __out_dir (Path): The directory to output processed audio files.
+        __supported_formats (Set[str]): Set of audio formats supported by FFmpeg for decoding.
+    """
+
     def __init__(self):
+        """Initializes the AudioHelper with the output directory and FFmpeg-supported decoding formats."""
         self.__out_dir = Path(config.AUDIO_OUT_DIR).resolve()
         self.__supported_formats = self.__get_ffmpeg_decoding_formats()
 
     def is_file_empty(self, infile: str) -> bool:
-        """Check if a file is empty based on file size or audio content.
+        """Checks whether a given audio file is considered empty.
+
+        A file is considered empty if it is smaller than ~12KB or contains only silence.
 
         Args:
             infile (str): Path to the input file.
 
         Returns:
-            bool: True if the file is empty or contains only silence, False otherwise.
+            bool: True if the file is empty or silent, False otherwise.
         """
         size_kb = os.path.getsize(infile) / 1024
         if size_kb <= 12:
@@ -33,13 +44,19 @@ class AudioHelper:
         return self.__is_audio_empty(infile)
 
     def convert_audio_to_wav(self, infile: str) -> str:
-        """Convert an input audio file to WAV format.
+        """Converts an input audio file to WAV format.
+
+        Validates file format support based on FFmpeg's decoding capabilities,
+        then uses `pydub` to perform the conversion.
 
         Args:
             infile (str): Path to the input audio file.
 
         Returns:
-            str : Path to the output WAV file.
+            str: Path to the generated WAV file.
+
+        Raises:
+            TranscriptionError: If the file format is unsupported or conversion fails.
         """
         if not self.__is_file_format_supported(infile):
             log.exception(f"File format of {infile} is not supported.")
@@ -62,9 +79,13 @@ class AudioHelper:
             )
 
     def __is_file_format_supported(self, filepath: str) -> bool:
-        """
-        Checks if the file extension of `filepath` is in the list of formats
-        supported for decoding by ffmpeg.
+        """Checks whether the given audio file's format is supported for decoding by FFmpeg.
+
+        Args:
+            filepath (str): Path to the audio file.
+
+        Returns:
+            bool: True if the format is supported, False otherwise.
         """
         log.info(f"Checking if {filepath} is supported by ffmpeg")
         _, ext = os.path.splitext(filepath)
@@ -98,8 +119,10 @@ class AudioHelper:
 
     @staticmethod
     def __get_ffmpeg_decoding_formats() -> Set[str]:
-        """
-        Cached function to get supported ffmpeg decoding formats.
+        """Parses FFmpeg output to get a set of supported decoding formats.
+
+        Returns:
+            Set[str]: A set of lowercase format strings supported by FFmpeg for decoding.
         """
         log.info("Getting supported ffmpeg decoding formats")
         # run ffmpeg -formats to get supported formats

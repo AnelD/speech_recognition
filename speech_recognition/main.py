@@ -20,6 +20,7 @@ log = LoggerHelper(__name__).get_logger()
 
 
 async def main():
+    """Initialize and start the speech recognition application."""
     log.info("Initializing...")
     # Get configured filepaths
     in_dir = str(Path(config.AUDIO_IN_DIR).resolve())
@@ -35,7 +36,7 @@ async def main():
     client = WebSocketClient(config.WEBSOCKET_URI, text_queue)
     asr = ASRService()
     llm = LLMService()
-    tts = TTSService(client)
+    tts = TTSService()
     file_observer = FileObserver(event_loop, speech_queue, in_dir)
 
     # Create Workers

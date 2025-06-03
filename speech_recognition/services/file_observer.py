@@ -1,7 +1,6 @@
 import asyncio
 import os
 from asyncio import AbstractEventLoop
-from asyncio import Queue
 from typing import Any
 
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
@@ -14,30 +13,36 @@ log = LoggerHelper(__name__).get_logger()
 
 
 class FileObserver(FileSystemEventHandler):
-    """
-    A class to observe file system events and handle file creation events.
+    """Observes a directory and handles file creation events.
 
-    This class extends the `FileSystemEventHandler` from `watchdog` to monitor
-    file system changes. It listens for file creation events, logs the events,
-    and adds the created file names to a processing queue asynchronously.
+    This class uses `watchdog` to monitor a specified directory. When a new file is
+    created, it identifies the type of request based on the filename and enqueues
+    the file for asynchronous processing.
 
     Attributes:
-        __loop (AbstractEventLoop): The event loop used for scheduling tasks.
-        __queue (Queue): The queue to which filenames are added for processing.
+        __loop (AbstractEventLoop): The event loop used to schedule coroutines.
+        __queue (asyncio.Queue): An asyncio queue to store files for processing.
+        __path (str): Directory path to be observed.
+        __observer (BaseObserver): The watchdog observer instance.
     """
 
-    def __init__(self, loop: AbstractEventLoop, queue: Queue, path: str) -> None:
+    def __init__(
+        self, loop: AbstractEventLoop, queue: asyncio.Queue, path: str
+    ) -> None:
+        """Initializes the FileObserver.
+
+        Args:
+            loop (AbstractEventLoop): The event loop for running coroutines.
+            queue (asyncio.Queue): An asyncio queue where detected files will be added.
+            path (str): The path to the directory to observe.
+        """
         self.__loop = loop
         self.__queue = queue
         self.__path = path
-
-        # Used to store the actual observer instance
         self.__observer = None
 
     def start(self) -> None:
-        """
-        Starts the file system observer to monitor the specified directory.
-        """
+        """Starts monitoring the target directory for file creation events."""
         self.__observer = Observer()
         log.debug(f"Starting file observer on {self.__path}")
         self.__observer.schedule(event_handler=self, path=self.__path, recursive=False)
@@ -46,25 +51,23 @@ class FileObserver(FileSystemEventHandler):
         self.__observer.join()
 
     def stop(self) -> None:
-        """
-        Gracefully stops the file system observer.
-        This method stops the observer and joins the threads to ensure a clean shutdown.
-        """
+        """Stops the file observer and waits for its thread to terminate."""
         if self.__observer is not None:
             self.__observer.stop()
             log.info("[Observer] Stopping observer...")
-            # Wait for the observer thread to finish
             self.__observer.join()
             log.info("[Observer] Observer stopped successfully.")
         else:
             log.warning("[Observer] No observer is currently running.")
 
     def on_created(self, event: FileSystemEvent) -> None:
-        """
-        Handles file creation events.
+        """Handles the event triggered when a new file is created.
+
+        Parses the file name to determine the request type and adds the file path
+        and request type to the queue for processing.
 
         Args:
-            event (FileSystemEvent): The event triggered by file creation.
+            event (FileSystemEvent): The file creation event.
         """
         filename = str(event.src_path.split(os.sep)[-1])
         log.info(f"Detected file creation: {filename}")
@@ -85,11 +88,11 @@ class FileObserver(FileSystemEventHandler):
             log.warning(f"Exception when adding file to queue: {e}")
 
     async def __add_to_queue(self, item: Any) -> None:
-        """
-        Asynchronously adds an item to the processing queue.
+        """Adds an item to the asyncio queue.
 
         Args:
-            item (Any): The item to be added to the queue.
+            item (Any): The item to add to the queue, typically a dict containing
+                'file' (str): File path, and 'req_type' (RequestType).
         """
         log.debug(f"Adding to queue: {item}")
         await self.__queue.put(item)

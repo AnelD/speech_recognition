@@ -8,22 +8,27 @@ from speech_recognition import config
 
 
 class LoggerHelper:
-    """
-    LoggerHelper sets up a logger that writes to both the console and a time-rotated log file.
+    """Helper class to configure and retrieve a logger with console and file output.
 
-    Logs are:
-    - Written to the console with timestamps (hour:min:sec)
-    - Rotated daily at midnight
-    - Stored for up to 7 days
-    - Saved with filenames formatted like: logs/app_log_YYYY-MM-DD.log
+    Features:
+        - Console logging with color output using `colorlog`.
+        - File logging with daily rotation using `TimedRotatingFileHandler`.
+        - Keeps logs for up to 7 days.
 
     Attributes:
-        name (str): Name of the logger.
-        log_file (str): Path to the log file. Default is 'logs/app.log'.
-        log_level (int): Logging level (e.g., logging.INFO, logging.DEBUG).
+        logger (logging.Logger): The configured logger instance.
+        log_file (str): The log file path defined in `config.LOG_FILE`.
     """
 
     def __init__(self, name: str) -> None:
+        """Initializes the LoggerHelper instance.
+
+        Sets up the logger with colored console output and daily-rotating log files
+        unless in a test environment.
+
+        Args:
+            name (str): Name for the logger, typically `__name__`.
+        """
         self.logger = logging.getLogger(name)
         self.logger.setLevel(config.LOG_LEVEL)
         self.logger.propagate = False
@@ -59,6 +64,7 @@ class LoggerHelper:
                 backupCount=7,
                 encoding="utf-8",
                 utc=False,
+                delay=True,
             )
             file_formatter = logging.Formatter(
                 fmt="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -68,5 +74,9 @@ class LoggerHelper:
             self.logger.addHandler(file_handler)
 
     def get_logger(self) -> logging.Logger:
-        """Returns the configured logger."""
+        """Returns the configured logger instance.
+
+        Returns:
+            logging.Logger: The configured logger.
+        """
         return self.logger

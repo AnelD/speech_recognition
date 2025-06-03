@@ -10,6 +10,22 @@ log = LoggerHelper(__name__).get_logger()
 
 
 class AudioExtractionWorker(AbstractWorker):
+    """
+    Worker that processes audio files to extract text and structured data.
+
+    This worker listens for incoming audio processing requests on a queue, transcribes
+    the audio to text using an ASR (Automatic Speech Recognition) service, and then
+    generates structured JSON data using a language model (LLM) service based on the transcription.
+
+    It communicates progress, success, and errors back to a client via WebSocket messages.
+
+    Attributes:
+        __speech_queue (asyncio.Queue): Queue of audio processing requests.
+        __asr_service (ASRService): Service to transcribe audio to text.
+        __llm_service (LLMService): Service to generate structured JSON response from text.
+        __client (WebSocketClient): Client to send status and result messages.
+    """
+
     def __init__(
         self,
         speech_queue: asyncio.Queue,
@@ -17,12 +33,33 @@ class AudioExtractionWorker(AbstractWorker):
         llm_service: LLMService,
         client: WebSocketClient,
     ):
+        """
+        Initialize the AudioExtractionWorker.
+
+        Args:
+            speech_queue (asyncio.Queue): Queue from which audio processing requests are read.
+            asr_service (ASRService): Instance of the ASR service for audio transcription.
+            llm_service (LLMService): Instance of the LLM service for JSON response generation.
+            client (WebSocketClient): WebSocket client used to send messages back to the requester.
+        """
         self.__speech_queue = speech_queue
         self.__asr_service = asr_service
         self.__llm_service = llm_service
         self.__client = client
 
     async def do_work(self):
+        """
+        Continuously process audio extraction requests from the queue.
+
+        For each request:
+        - Validate the request type.
+        - Notify the client that processing is starting.
+        - Transcribe the audio file to text using ASR service.
+        - Generate a JSON response from the transcription using the LLM service.
+        - Send success or error messages back to the client.
+
+        Handles exceptions from transcription and LLM processing and sends error messages accordingly.
+        """
         while True:
             request = await self.__speech_queue.get()
             log.info(f"Received request: {request}")
