@@ -27,7 +27,7 @@ async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
     )
 
     # Create an instance with a dummy ws client
-    service = speech_recognition.services.tts_service.TTSService(mocker.AsyncMock())
+    service = speech_recognition.services.tts_service.TTSService()
 
     # Run it
     await service._TTSService__run_command_in_subprocess("echo hi")
@@ -51,7 +51,7 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     monkeypatch.setattr(speech_recognition.config, "GENERATE_AUDIO_DIR", "/mock/output")
 
     # Create the service instance
-    service = speech_recognition.services.tts_service.TTSService(mocker.AsyncMock())
+    service = speech_recognition.services.tts_service.TTSService()
 
     # Replace real _run_command_in_subprocess so we can look at the args it was called with
     mock_run = mocker.AsyncMock()

@@ -103,7 +103,7 @@ async def _send_and_assert_person_data(cwd, received_queue):
                 "email_address": "maxilianemustermann.gmail.com",
                 "firstname": "Maximiliane",
                 "lastname": "Mustermann",
-                "phone_number": "0123 45 67 890",
+                "phone_number": "0123 4567890",
                 "sex": "M",
             }
             break
@@ -112,11 +112,11 @@ async def _send_and_assert_person_data(cwd, received_queue):
 
 
 async def _send_and_assert_command_yes(cwd, received_queue):
-    inputs = ["yes", "no"]
-    for input in inputs:
+    expected = ["yes", "no"]
+    for expect in expected:
         # Move a file to the watched directory
-        src = Path(f"{cwd}/data/test_audios/command-test-{input}.flac").resolve()
-        dest = Path(f"{cwd}/data/in/command-test-{input}.flac").resolve()
+        src = Path(f"{cwd}/data/test_audios/command-test-{expect}.flac").resolve()
+        dest = Path(f"{cwd}/data/in/command-test-{expect}.flac").resolve()
         # Delete the previous one if it exists so new event is sent out
         if os.path.exists(dest):
             os.remove(dest)
@@ -129,7 +129,7 @@ async def _send_and_assert_command_yes(cwd, received_queue):
                 continue
             if json_resp["type"] == "EXTRACT_DATA_FROM_AUDIO_SUCCESS":
                 assert json_resp["message"]["text"] == {
-                    "result": f"{input.upper()}",
+                    "result": f"{expect.upper()}",
                 }
                 break
             else:
