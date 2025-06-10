@@ -34,11 +34,12 @@ async def test_stt_it(monkeypatch):
         speech_recognition.config, "WEBSOCKET_URI", "ws://localhost:8080"
     )
     # Set it to watch the test folders
-    cwd = os.getcwd()
-    in_dir = f"{cwd}/data/in"
-    out_dir = f"{cwd}/data/out"
-    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", in_dir)
-    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", out_dir)
+    cwd = Path(os.getcwd())
+    monkeypatch.setattr(
+        speech_recognition.config, "GENERATE_AUDIO_DIR", str(cwd / "data/generated")
+    )
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", str(cwd / "data/in"))
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", str(cwd / "data/out"))
 
     # Start the mock server
     shutdown_event = asyncio.Event()
@@ -66,8 +67,8 @@ async def test_stt_it(monkeypatch):
     finally:
         # Clean up files after tests
         # Find all .wav files created during the test
-        flac_files = glob.glob(os.path.join(in_dir, "*.flac"))
-        wav_files = glob.glob(os.path.join(out_dir, "*.wav"))
+        flac_files = glob.glob(str(Path("data/in").resolve() / "*.flac"))
+        wav_files = glob.glob(str(Path("data/out").resolve() / "*.wav"))
 
         for file in flac_files:
             os.remove(file)

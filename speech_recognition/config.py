@@ -12,7 +12,7 @@ AUDIO_OUT_DIR = r"/home/anel/PycharmProjects/speech_recognition/data/out"
 
 
 # TTS (Text-to-Speech) settings
-PIPER_DIR = r"/home/anel/Desktop/piper"
+PIPER_DIR = r"C:\Users\dervi\Desktop\piper"
 # Voice model name for Piper
 # If it's not inside the PIPER_DIR, provide the full absolute path
 VOICE_NAME = "de_DE-thorsten-high.onnx"

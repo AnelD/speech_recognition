@@ -84,11 +84,10 @@ class LLMService{
 }
 
 class TTSService{
--WebSocketClient __client
 -str __piper_dir
 -str __prepared_command
 
-+TTSService TTSService(WebSocketClient)
++TTSService TTSService()
 +str generate_audio(str)
 
 -Optional[str] __run_command_in_subprocess(str)
@@ -115,9 +114,10 @@ class WebSocketClient{
 
 class AudioHelper{
 -set[str] __supported_decoding_formats
+-str __out_dir
 
 +bool is_file_empty(str)
-+void convert_audio_to_wav(str, str)
++void convert_audio_to_wav(str)
 
 -bool __is_file_format_supported(str)
 -{static}bool __is_audio_empty(str, int, int)
@@ -130,27 +130,6 @@ PERSON_DATA
 COMMAND_DATA
 }
 
-
-exception AudioGenerationError{
-+str message
-
-+AudioGenerationError AudioGenerationWorker(str)
-}
-
-exception LLMProcessingError{
-+str message
-
-+LLMProcessingError LLMProcessingError(str)
-}
-
-exception TranscriptionError{
-+str message
-
-+TranscriptionError TranscriptionError(str)
-}
-
-exception Exception{
-}
 
 Manager o--> AbstractWorker
 Manager --> FileObserver
@@ -165,15 +144,5 @@ FileSystemEventHandler <|-- FileObserver
 ASRService --> AudioHelper
 LLMService --> RequestType
 FileObserver --> RequestType
-
-AudioGenerationError ..|> Exception
-LLMProcessingError ..|> Exception
-TranscriptionError ..|> Exception
-
-TTSService --> AudioGenerationError
-LLMService --> LLMProcessingError
-ASRService --> TranscriptionError
-AudioHelper --> TranscriptionError
-
 
 @enduml

@@ -31,10 +31,12 @@ async def test_tts_it(monkeypatch):
         speech_recognition.config, "WEBSOCKET_URI", "ws://localhost:8080"
     )
     # generate audio in test folder
-    cwd = os.getcwd()
+    cwd = Path(os.getcwd())
     monkeypatch.setattr(
-        speech_recognition.config, "GENERATE_AUDIO_DIR", cwd + "/data/generated"
+        speech_recognition.config, "GENERATE_AUDIO_DIR", str(cwd / "data/generated")
     )
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_IN_DIR", str(cwd / "data/in"))
+    monkeypatch.setattr(speech_recognition.config, "AUDIO_OUT_DIR", str(cwd / "data/out"))
 
     # Start the mock server
     shutdown_event = asyncio.Event()
@@ -57,7 +59,7 @@ async def test_tts_it(monkeypatch):
 
     # Find all .wav files created during the test
     output_dir = "../tests/data/generated"
-    wav_files = glob.glob(os.path.join(output_dir, "*.wav"))
+    wav_files = glob.glob(str(Path(output_dir).resolve() / "*.wav"))
 
     # Assert at least one .wav file was created
     assert len(wav_files) > 0, "No .wav files were generated"

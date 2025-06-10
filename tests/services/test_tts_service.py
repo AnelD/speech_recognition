@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 import pytest
 
@@ -32,6 +33,7 @@ async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
     # Run it
     await service._TTSService__run_command_in_subprocess("echo hi")
 
+    expected_cwd = str(Path("/mock/piper").absolute())
     # Assert it was called correctly
     mock_proc.communicate.assert_called_once()
     mock_sub_shell.assert_called_once_with(
@@ -39,7 +41,7 @@ async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         shell=True,
-        cwd="/mock/piper",
+        cwd=expected_cwd,
     )
 
 
@@ -66,10 +68,11 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     with pytest.raises(AudioGenerationError):
         await task
 
+    expected_output = str(Path("/mock/output").absolute())
     # Assert the things
     assert mock_run.call_count == 1
     called_command = mock_run.call_args.args[0]
     assert "hello world" in called_command
     assert ".\\piper" in called_command or "./piper" in called_command
     assert "-m mock_voice" in called_command
-    assert "-f /mock/output/" in called_command
+    assert "-f " + expected_output in called_command

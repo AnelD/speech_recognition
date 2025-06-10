@@ -1,6 +1,5 @@
 import asyncio
 import os
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -50,7 +49,7 @@ class TTSService:
 
         log.info(f"TTS starting with input: {text}")
         input_text = f'echo "{text}" '
-        filename = datetime.now().strftime("%Y_%m_%d_%H:%M:%S") + ".wav"
+        filename = "audio.wav"
         command = f"{input_text} {self.__prepared_command}{os.sep}{filename}"
         log.debug(f"Executing command: {command}")
 
