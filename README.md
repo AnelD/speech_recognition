@@ -96,8 +96,8 @@ Now upgrade pip and install the required packages
 <br>
 ``pip install -r requirements.txt``
 <br>
-⚠️ Note: Only CPU version of PyTorch is in the requirements.txt Please install the appropriate version for your system
-manually.
+⚠️ Note: Only CPU version of PyTorch is in the requirements.txt.
+If you have an nvidia GPU, please install the appropriate version manually.
 
 Install PyTorch (Choose Your CUDA Version)
 
@@ -116,9 +116,9 @@ in the Root directory and it should run all tests.
 
 # Starting the application
 
-Once everything is installed you can go into the speech_recognition/config.py and configure it how you want it.
+Once everything is installed, you can go into the speech_recognition/config.py and configure it how you want it.
 
-To start it you just need to have the venv activated and execute
+To start it, you need to have the venv activated and execute
 
 ``python run.py``
 
@@ -128,7 +128,8 @@ If you do not have/want an external server there is a mock server that can be st
 
 ``python -m tests.mock_server``
 
-This is a very simple server, you can use it to send messages to generate audio files for.
-The server will take care of properly wrapping it just send the sentence you want the Text-To-Speech to generate.
-The server will obviously also receive the results of starting Speech-Recognition if you put an Audio file the specified
+This is a basic server, you can use it to send messages to generate audio files for.
+The server will take care of properly wrapping it you only need
+to send the sentence you want the text-to-speech to generate.
+The server will also receive the results of the speech recognition if you put an audio file the specified
 in directory.
