@@ -1,10 +1,12 @@
 import asyncio
 import logging
+from pathlib import Path
 
 import pytest
 
 import speech_recognition
 import speech_recognition.services.tts_service
+from speech_recognition.exceptions.audio_generation_error import AudioGenerationError
 
 
 @pytest.fixture(autouse=True)
@@ -25,14 +27,13 @@ async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
         return_value=mock_proc,
     )
 
-    # Create an instance with a dummy queue
-    service = speech_recognition.services.tts_service.TTSService(
-        asyncio.Queue(), mocker.AsyncMock()
-    )
+    # Create an instance with a dummy ws client
+    service = speech_recognition.services.tts_service.TTSService()
 
     # Run it
     await service._TTSService__run_command_in_subprocess("echo hi")
 
+    expected_cwd = str(Path("/mock/piper").absolute())
     # Assert it was called correctly
     mock_proc.communicate.assert_called_once()
     mock_sub_shell.assert_called_once_with(
@@ -40,7 +41,7 @@ async def test_run_command_in_subprocess_is_called(mocker, monkeypatch):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         shell=True,
-        cwd="/mock/piper",
+        cwd=expected_cwd,
     )
 
 
@@ -51,32 +52,27 @@ async def test_text_to_speech_creates_correct_command(mocker, monkeypatch):
     monkeypatch.setattr(speech_recognition.config, "VOICE_NAME", "mock_voice")
     monkeypatch.setattr(speech_recognition.config, "GENERATE_AUDIO_DIR", "/mock/output")
 
-    # Create queue and put a message
-    queue = asyncio.Queue()
-    await queue.put("hello world")
-
     # Create the service instance
-    service = speech_recognition.services.tts_service.TTSService(
-        queue, mocker.AsyncMock()
-    )
+    service = speech_recognition.services.tts_service.TTSService()
 
     # Replace real _run_command_in_subprocess so we can look at the args it was called with
     mock_run = mocker.AsyncMock()
     mocker.patch.object(service, "_TTSService__run_command_in_subprocess", mock_run)
 
     # Await for the task to start
-    task = asyncio.create_task(service.text_to_speech())
+    task = asyncio.create_task(service.generate_audio("hello world"))
     await asyncio.sleep(0.1)
 
     # We don't need it to actually do anything
     task.cancel()
-    with pytest.raises(asyncio.CancelledError):
+    with pytest.raises(AudioGenerationError):
         await task
 
+    expected_output = str(Path("/mock/output").absolute())
     # Assert the things
     assert mock_run.call_count == 1
     called_command = mock_run.call_args.args[0]
     assert "hello world" in called_command
     assert ".\\piper" in called_command or "./piper" in called_command
     assert "-m mock_voice" in called_command
-    assert "-f /mock/output/" in called_command
+    assert "-f " + expected_output in called_command

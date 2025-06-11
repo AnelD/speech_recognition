@@ -5,7 +5,7 @@ class TranscriptionError(Exception):
         message (str): Explanation of the error.
     """
 
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         """Initialize TranscriptionError.
 
         Args:

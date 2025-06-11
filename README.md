@@ -78,13 +78,26 @@ Once you have the venv ready and activated, your terminal should look like:
 ``(venv) C:\Users\you\...``
 <br>
 <br>
+*Linux*
+<br>
+``python -m venv venv``
+<br>
+``venv/bin/activate``
+<br>
+<br>
+Once you have the venv ready and activated, your terminal should look like:
+<br>
+``(venv) ~/...``
+<br>
+<br>
 Now upgrade pip and install the required packages
 <br>
 ``pip install --upgrade pip``
 <br>
 ``pip install -r requirements.txt``
 <br>
-⚠️ Note: PyTorch is not included in requirements.txt. Please install the appropriate version for your system manually.
+⚠️ Note: Only CPU version of PyTorch is in the requirements.txt.
+If you have an nvidia GPU, please install the appropriate version manually.
 
 Install PyTorch (Choose Your CUDA Version)
 
@@ -97,6 +110,26 @@ If using CUDA 12.6:
 
 ``pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126``
 
-If using CPU-only:
+You should now be able to run
+``pytest``
+in the Root directory and it should run all tests.
 
-``pip install torch torchvision torchaudio``
+# Starting the application
+
+Once everything is installed, you can go into the speech_recognition/config.py and configure it how you want it.
+
+To start it, you need to have the venv activated and execute
+
+``python run.py``
+
+from the root directory
+
+If you do not have/want an external server there is a mock server that can be started with
+
+``python -m tests.mock_server``
+
+This is a basic server, you can use it to send messages to generate audio files for.
+The server will take care of properly wrapping it you only need
+to send the sentence you want the text-to-speech to generate.
+The server will also receive the results of the speech recognition if you put an audio file the specified
+in directory.

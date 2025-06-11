@@ -36,7 +36,7 @@ async def test_on_created_real_queue(tmp_path, test_input, expected):
     assert not queue.empty(), "Queue should have one item after file creation"
     item = await queue.get()
 
-    assert item["filename"] == test_input
+    assert test_input in item["file"]
     assert item["req_type"] == expected
 
 
