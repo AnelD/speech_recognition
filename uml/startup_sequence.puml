@@ -1,0 +1,105 @@
+@startuml
+title Startup
+
+participant Server
+participant WebSocketClient
+participant Main
+participant Manager
+participant AudioExtractionWorker
+participant AudioGenerationWorker
+participant ASRService
+participant AudioHelper
+participant LLMService
+participant TTSService
+participant FileObserver
+participant Thread
+
+activate Main
+create WebSocketClient
+Main -> WebSocketClient : WebSocketClient()
+activate WebSocketClient
+return WebsocketClient
+WebSocketClient -> WebSocketClient : __receive_messages()
+activate WebSocketClient
+
+create ASRService
+Main -> ASRService : ASRService()
+activate ASRService
+create AudioHelper
+ASRService -> AudioHelper : AudioHelper()
+activate AudioHelper
+AudioHelper -> AudioHelper : __get_ffmpeg_decoding_formats()
+activate AudioHelper
+return supported_formats
+return AudioHelper
+ASRService -> ASRService : __load_model()
+activate ASRService
+return Model
+return ASRService
+
+create LLMService
+Main -> LLMService : LLMService()
+activate LLMService
+LLMService -> LLMService : __load_model()
+activate LLMService
+return [Model, Tokenizer]
+return LLMService
+
+
+create TTSService
+Main -> TTSService : TTSService()
+activate TTSService
+return TTSService
+
+
+create FileObserver
+Main -> FileObserver : FileObserver()
+activate FileObserver
+return FileObserver
+
+create AudioExtractionWorker
+Main -> AudioExtractionWorker : AudioExtractionWorker()
+activate AudioExtractionWorker
+return AudioExtractionWorker
+
+create AudioGenerationWorker
+Main -> AudioGenerationWorker : AudioGenerationWorker()
+activate AudioGenerationWorker
+return AudioGenerationWorker
+
+create Manager
+Main -> Manager : Manager()
+activate Manager
+Manager -> Manager : __start_file_observer()
+activate Manager
+create Thread
+Manager -> Thread : Thread()
+activate Thread
+return Thread
+return
+return Manager
+
+Main -> WebSocketClient : connect()
+activate WebSocketClient
+WebSocketClient -> WebSocketClient : send_message()
+activate WebSocketClient
+WebSocketClient -> Server : Register
+return
+return
+
+Main -> Manager : start()
+deactivate Main
+activate Manager
+
+Manager -> Thread : start()
+activate Thread
+Thread -> FileObserver : start()
+activate FileObserver
+
+
+Manager -> AudioExtractionWorker : do_work()
+activate AudioExtractionWorker
+Manager -> AudioGenerationWorker : do_work()
+activate AudioGenerationWorker
+
+@enduml
