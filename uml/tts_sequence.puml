@@ -1,4 +1,6 @@
 @startuml
+title Text-To-Speech
+
 participant Server
 participant WebSocketClient
 queue text_queue

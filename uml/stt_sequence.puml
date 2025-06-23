@@ -1,4 +1,5 @@
 @startuml
+title Speech-To-Text
 
 participant Server
 participant WebSocketClient
