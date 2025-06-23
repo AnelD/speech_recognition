@@ -1,0 +1,57 @@
+@startuml
+title Speech-To-Text
+
+participant Server
+participant WebSocketClient
+participant FileObserver
+queue speech_queue
+participant AudioExtractionWorker
+participant ASRService
+participant AudioHelper
+participant LLMService
+
+
+activate WebSocketClient
+activate AudioExtractionWorker
+activate FileObserver
+ -> Server : File Upload
+FileObserver -> FileObserver : on_created()
+activate FileObserver
+FileObserver -> FileObserver : __add_to_queue()
+FileObserver -> speech_queue : put()
+return
+
+AudioExtractionWorker -> speech_queue : get()
+return File
+AudioExtractionWorker -> WebSocketClient : send_message()
+activate WebSocketClient
+WebSocketClient -> Server : Starting
+return
+
+AudioExtractionWorker -> ASRService : transcribe()
+activate ASRService
+ASRService -> AudioHelper : convert_to_wav()
+activate AudioHelper
+return wav_file
+ASRService -> ASRService : __transcriber()
+activate ASRService
+return
+return Transcript
+
+AudioExtractionWorker -> LLMService : generate_json_response()
+activate LLMService
+LLMService -> LLMService : __generate_output()
+activate LLMService
+return
+return Data as JSON
+
+AudioExtractionWorker -> WebSocketClient : send_message()
+activate WebSocketClient
+WebSocketClient -> Server : Data
+return
+
+
+
+
+
+@enduml
