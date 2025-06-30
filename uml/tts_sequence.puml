@@ -1,0 +1,41 @@
+@startuml
+title Text-To-Speech
+
+participant Server
+participant WebSocketClient
+queue text_queue
+participant AudioGenerationWorker
+participant TTSService
+participant PIPER_CLI
+participant FileSystem
+
+activate AudioGenerationWorker
+
+activate WebSocketClient
+Server -> WebSocketClient
+WebSocketClient -> WebSocketClient : __message_handler()
+activate WebSocketClient
+WebSocketClient -> text_queue : put()
+return
+
+AudioGenerationWorker -> text_queue : get()
+text_queue --> AudioGenerationWorker : Text
+
+AudioGenerationWorker -> TTSService : generate_audio()
+activate TTSService
+TTSService -> TTSService : __run_command_in_subprocess()
+activate TTSService
+TTSService -> PIPER_CLI
+activate PIPER_CLI
+PIPER_CLI -> FileSystem : Create audio file
+return
+return
+return File name
+
+AudioGenerationWorker -> WebSocketClient : send_message()
+activate WebSocketClient
+WebSocketClient -> Server : File name
+return
+
+
+@enduml
